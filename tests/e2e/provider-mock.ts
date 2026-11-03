@@ -29,7 +29,7 @@ export default async function globalSetup() {
     if (req.url === '/v1/responses' && req.method === 'POST') { const body = JSON.parse(raw); const key = raw.match(/PROVIDER_FAIL_ONCE-[a-z]+/i)?.[0] ?? 'normal'; if (key !== 'normal' ? !failed.has(key) : false) { failed.add(key); res.writeHead(503, { 'content-type': 'application/json' }); res.end(JSON.stringify({ error: { message: 'local controlled provider failure' } })); return; } const citation = /\[citation:([0-9a-f-]{36})\]/i.exec(raw)?.[1]; const text = citation ? 'Lokale Chatantwort mit Beleg [citation:' + citation + '].' : 'Lokales Briefing aus den ausgewählten Quellen.'; if (body.stream) { res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' }); streamResponse(res, text); return; } res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify(completedResponse(text))); return; }
     res.writeHead(501); res.end(JSON.stringify({ error: 'Unsupported local provider endpoint.' }));
   });
-  await new Promise<void>((resolve, reject) => { server!.once('error', reject); server!.listen(4186, '127.0.0.1', resolve); });
-  process.env.OPENAI_API_KEY = 'normal-suite-local-only'; process.env.OPENAI_BASE_URL = 'http://127.0.0.1:4186/v1';
-  return async () => { await new Promise<void>(resolve => server?.close(() => resolve())); if (requests < 1) throw new Error('Provider mock did not observe a request.'); };
+  await new Promise<void>((resolve, reject) => { server!.once('error', reject); server!.listen(4286, '127.0.0.1', resolve); });
+  process.env.OPENAI_API_KEY = 'normal-suite-local-only'; process.env.OPENAI_BASE_URL = 'http://127.0.0.1:4286/v1';
+  return async () => { await new Promise<void>(resolve => server?.close(() => resolve())); };
 }

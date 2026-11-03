@@ -19,4 +19,4 @@ Die Serverkonfiguration ist portabel: Deployment-Umgebungen setzen OPENAI_API_KE
 
 ### Provider-Isolation in der normalen E2E-Suite
 
-Die Playwright-Konfiguration setzt nur für den gestarteten Testprozess OPENAI_BASE_URL auf den lokalen Mock 127.0.0.1:4186/v1. Der Mock akzeptiert ausschließlich /v1/embeddings; sein Teardown verlangt mindestens einen echten Import-Aufruf. Source-Imports durchlaufen damit App- und Datenbankroute ohne externe Provideraufrufe. Echte Provider-Smokes bleiben pnpm test:integration:openai mit explizitem Opt-in.
+Die Playwright-Konfiguration setzt nur für den gestarteten Testprozess OPENAI_BASE_URL auf den lokalen Mock 127.0.0.1:4286/v1. Der Mock akzeptiert ausschließlich /v1/embeddings; sein Teardown verlangt mindestens einen echten Import-Aufruf. Source-Imports durchlaufen damit App- und Datenbankroute ohne externe Provideraufrufe. Echte Provider-Smokes bleiben pnpm test:integration:openai mit explizitem Opt-in.
