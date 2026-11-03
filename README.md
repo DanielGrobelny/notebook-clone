@@ -15,4 +15,8 @@ Bei erfolgreichem Stream protokolliert der Server ausschließlich Modellkennung 
 - pnpm test:storage – explizite Storage-/Chunk-Integrationsprüfung; keine Providerkosten
 - pnpm test:integration:openai – einziger explizit opt-in echter Browser → App → OpenAI → UI-Smoke (RUN_OPENAI_INTEGRATION=1); nur bei bewusst autorisiertem Lauf
 
-Die Serverkonfiguration ist portabel: Deployment-Umgebungen setzen OPENAI_API_KEY; die lokale Schlüsseldatei ist nur ein Entwicklungs-Fallback und gehört nicht ins Repository.
+Die Serverkonfiguration ist portabel: Deployment-Umgebungen setzen OPENAI_API_KEY; eine Schlüsseldatei ist nur über das explizite OPENAI_API_KEY_FILE-Opt-in erlaubt und gehört nicht ins Repository.
+
+### Provider-Isolation in der normalen E2E-Suite
+
+Die Playwright-Konfiguration setzt nur für den gestarteten Testprozess OPENAI_BASE_URL auf den lokalen Mock 127.0.0.1:4186/v1. Der Mock akzeptiert ausschließlich /v1/embeddings; sein Teardown verlangt mindestens einen echten Import-Aufruf. Source-Imports durchlaufen damit App- und Datenbankroute ohne externe Provideraufrufe. Echte Provider-Smokes bleiben pnpm test:integration:openai mit explizitem Opt-in.

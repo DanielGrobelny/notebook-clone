@@ -15,9 +15,9 @@ export async function setupRealSource(page: Page, isMobile: boolean, label: stri
     ? (await page.getByRole('button', { name: 'Quellen' }).click(), page.getByRole('dialog', { name: 'Quellen' }))
     : page;
   await scope.locator('input[type=file]').setInputFiles({
-    name: 'e2e-quelle.txt', mimeType: 'text/plain', buffer: Buffer.from('E2E-Quelleninhalt für sichere Transporttests.'),
+    name: 'e2e-quelle.txt', mimeType: 'text/plain', buffer: Buffer.from('E2E-Quelleninhalt für sichere Transporttests. '+label),
   });
-  await expect(scope.getByText('e2e-quelle.txt')).toBeVisible();
+  await expect(scope.getByText('e2e-quelle.txt', { exact: true })).toBeVisible();
   await scope.getByRole('button', { name: 'e2e-quelle.txt Bereit · Text', exact: true }).click();
   if (isMobile) await page.getByRole('button', { name: 'Quellen schließen' }).click();
 }

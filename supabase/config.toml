@@ -1,26 +1,45 @@
-project_id = "lumen-notebook-local"
+project_id = "notebook-studio-test"
+
 [api]
 enabled = true
-port = 54621
+port = 54821
 schemas = ["public", "storage", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
+
 [db]
-port = 54622
+port = 54822
+shadow_port = 54826
 major_version = 17
+
+[db.pooler]
+enabled = true
+port = 54825
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
 [studio]
 enabled = true
-port = 54623
-api_url = "http://127.0.0.1:54621"
+port = 54823
+api_url = "http://127.0.0.1:54821"
+
 [inbucket]
 enabled = true
-port = 54624
+port = 54824
+
+[analytics]
+enabled = true
+port = 54827
+backend = "postgres"
+
 [auth]
 enabled = true
-site_url = "http://127.0.0.1:3461"
-additional_redirect_urls = ["http://127.0.0.1:3461"]
+site_url = "http://127.0.0.1:4185"
+additional_redirect_urls = ["http://127.0.0.1:4185"]
 jwt_expiry = 3600
 enable_signup = true
+
 [auth.email]
 enable_signup = true
 double_confirm_changes = true
