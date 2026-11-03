@@ -1,0 +1,10 @@
+'use client';
+import {useState} from 'react';
+import {createClient} from '../lib/supabase/client';
+type Notebook={id:string;title:string};
+export function DemoOnboarding({onReady}:{onReady:(notebook:Notebook)=>void}) {
+ const [busy,setBusy]=useState(false),[message,setMessage]=useState('');
+ const start=async()=>{setBusy(true);setMessage('');try{const db=createClient();const {error}=await db.auth.signInAnonymously();if(error)throw error;const response=await fetch('/api/demo',{method:'POST'});const data=await response.json();if(!response.ok)throw new Error('Der Demo-Bereich konnte nicht angelegt werden.');onReady(data.notebook);setMessage(data.providerReady?'Dein persönliches Demo-Notebook ist bereit. Die Quellen sind synthetisch und nur für diese anonyme Sitzung sichtbar.':'Dein persönliches Demo-Notebook ist bereit. Die Quellen werden erst nach lokaler Modellkonfiguration durchsuchbar; es wurde keine KI-Antwort erzeugt.');}catch{setMessage('Der echte Demo-Einstieg ist lokal nicht verfügbar. Prüfe die lokale Supabase-Konfiguration.');}finally{setBusy(false)}};
+ const reset=async()=>{setBusy(true);setMessage('');try{const response=await fetch('/api/demo',{method:'DELETE'});if(!response.ok)throw new Error();onReady({id:'',title:''});setMessage('Nur dein persönlicher Demo-Bereich wurde gelöscht. Private Notebooks bleiben unverändert.');}catch{setMessage('Der Demo-Bereich konnte nicht zurückgesetzt werden.');}finally{setBusy(false)}};
+ return <section className="demo-onboarding" aria-labelledby="demo-area-title"><p className="eyebrow">Sicher ausprobieren</p><h2 id="demo-area-title">Persönliches Demo-Notebook</h2><p>Starte eine eigene anonyme Sitzung. Die Quellen sind synthetisch, Rechte sind auf deine Sitzung begrenzt und kein gemeinsamer Demo-Account wird verwendet.</p><div className="demo-actions"><button type="button" onClick={()=>void start()} disabled={busy}>{busy?'Wird vorbereitet …':'Echte Demo starten'}</button><button type="button" className="demo-reset" onClick={()=>void reset()} disabled={busy}>Nur meine Demo zurücksetzen</button></div>{message&&<p role="status" className="demo-status">{message}</p>}</section>;
+}
