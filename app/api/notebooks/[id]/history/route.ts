@@ -6,7 +6,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   const parsed = uuid.safeParse((await params).id);
   if (!parsed.success) return NextResponse.json({ error: 'invalid_id' }, { status: 400 });
   const db = await createClient();
-  const { data: { user } } = await db.auth.getUser();
+  const user=db.visitor;
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   const { data: notebook } = await db.from('notebooks').select('id').eq('id', parsed.data).maybeSingle();
   if (!notebook) return NextResponse.json({ error: 'not_found' }, { status: 404 });

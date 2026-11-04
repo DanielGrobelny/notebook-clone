@@ -4,7 +4,7 @@ export type RetrievedPassage = { id: string; source_id: string; content: string;
 export type ChatHistoryMessage = { role: 'user' | 'assistant'; content: string };
 export async function scopedSimilaritySearch(db: any, input: { notebookId: string; userId: string; sourceIds: string[]; question: string; apiKey: string; signal?: AbortSignal }) {
   if (input.signal?.aborted) throw new DOMException('The operation was aborted.', 'AbortError');
-  const [embedding] = await embedTexts([input.question], input.apiKey, input.signal);
+  const {data:sources,error:sourceError}=await db.from('sources').select('id,status').eq('notebook_id',input.notebookId).in('id',input.sourceIds); if(sourceError||!sources||sources.length!==new Set(input.sourceIds).size||sources.some((s:any)=>s.status!=='ready'))throw new Error('sources_unavailable'); const [embedding] = await embedTexts([input.question], input.apiKey, input.signal);
   if (input.signal?.aborted) throw new DOMException('The operation was aborted.', 'AbortError');
   const { data, error } = await db.rpc('match_source_chunks', { p_notebook_id: input.notebookId, p_user_id: input.userId, p_source_ids: input.sourceIds, p_query_embedding: vectorLiteral(embedding), p_match_count: retrievalLimits.maxChunks });
   if (error) throw error;
