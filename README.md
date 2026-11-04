@@ -51,3 +51,9 @@ Es gibt keinen automatischen Session-Cleanup. Der FK von visitor_provider_limits
 Der frühere TXT-Deployment-Smoke belegte keine funktionierende PDF-Verarbeitung. Der PDF.js-Worker muss ausdrücklich importiert werden, damit er im serverlosen Build enthalten ist; ein Parser-/Worker-Ausfall wird als Serverfehler (503), nicht als beschädigte Datei gemeldet. Defekte und passwortgeschützte PDFs sowie PDFs ohne extrahierbaren Text haben getrennte Meldungen. OCR bleibt nicht unterstützt.
 
 Zusätzlich zu kleinen deterministischen PDF-Fixtures können über REAL_PDF_FIXTURES zwei unabhängig erstellte Dokumente geprüft werden: bitcoin.pdf (9 Seiten, OpenOffice; bitcoin.org/bitcoin.pdf) und tracemonkey.pdf (14 Seiten, TeX; Mozilla PDF.js compressed.tracemonkey-pldi-09.pdf). Diese Dokumente liegen außerhalb des Repositorys. Das ist gezielte Format-/Deployment-Abdeckung, keine Garantie für sämtliche PDFs. Erfolgreich importierte Quellen werden automatisch ausgewählt; ohne ausgewählte Quellen erklärt die Oberfläche, warum kein Chat gesendet wird.
+
+### Quellen-zuerst und Willkommen
+
+Der Chat ist erst mit mindestens einer ausgewählten, fertig verarbeiteten Quelle bedienbar (Eingabe, Senden und Enter). Nach Import wird die fertige Quelle ausgewählt; Abwahl oder Löschen sperrt wieder. Initialisierung, Uploadverarbeitung und fehlende Auswahl sind getrennte Zustände.
+
+Ein zugänglicher Willkommensdialog erscheint nach erfolgreichem Bootstrap beim ersten Besuch. Erst Schließen/Escape/CTA setzt den versionierten lokalen Browsermarker `lumen.welcome.v1`. Weitere Tabs übernehmen das Schließen über das Storage-Ereignis. Ohne verfügbaren Browserstorage bleibt die App benutzbar; nach einem Reload kann das Willkommen erneut erscheinen. Der Marker ist keine Anmeldung und ersetzt nicht das HttpOnly-Sitzungscookie. Backendfehler werden ohne vorgeschaltetes Modal mit Retry angezeigt.

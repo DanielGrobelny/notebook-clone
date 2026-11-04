@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './test-fixture';
 import { createClient } from '@supabase/supabase-js';
 const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { autoRefreshToken: false, persistSession: false } });
 test.skip(!process.env.RUN_OPENAI_INTEGRATION, 'Set RUN_OPENAI_INTEGRATION=1 for the paid real-provider smoke test');

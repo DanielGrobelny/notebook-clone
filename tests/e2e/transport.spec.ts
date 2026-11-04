@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './test-fixture';
 import { setupRealSource } from './real-source';
 const stream = (text: string) => [
   'data: {"type":"start","messageId":"assistant-1"}',

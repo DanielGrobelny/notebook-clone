@@ -1,5 +1,5 @@
 import { deflateSync } from 'node:zlib';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './test-fixture';
 
 const credentials = (label: string) => ({ email: label + '-' + Date.now() + '-' + Math.random().toString(36).slice(2) + '@example.test', password: 'Notebook-import-test-2026!' });
 async function signUp(page: import('@playwright/test').Page, user: ReturnType<typeof credentials>) { await page.goto('/');    await page.getByText('Notebooks wechseln',{exact:true}).click();await expect(page.getByRole('button', { name: 'Mein Notebook',exact:true })).toBeVisible(); }
@@ -32,7 +32,7 @@ test('API: Import, PDF-Seite 2, Validierung, Dedup, Löschen und Mandantentrennu
   const detail = await page.evaluate(async ({ id, sourceId }) => { const r = await fetch('/api/notebooks/' + id + '/sources/' + sourceId); return { status: r.status, body: await r.json() }; }, { id, sourceId: pdf.body.source.id }); expect(detail.status).toBe(200); expect(detail.body.chunks.map((c: { metadata: { page: number } }) => c.metadata.page)).toEqual([1, 2]);
   for (const bad of [{ name: 'empty.txt', mime: 'text/plain', buffer: Buffer.alloc(0) }, { name: 'broken.pdf', mime: 'application/pdf', buffer: Buffer.from('%PDF-1.4 broken') }, { name: 'large.txt', mime: 'text/plain', buffer: Buffer.alloc(5 * 1024 * 1024 + 1, 'x') }]) expect((await postSource(page, id, bad)).status).toBe(400);
   const duplicate = { name: 'same.txt', mime: 'text/plain', buffer: Buffer.from('parallel hash') }; const parallel = await Promise.all([postSource(page, id, duplicate), postSource(page, id, duplicate)]); expect(parallel.map(x => x.status).sort()).toEqual([200, 201]); expect(parallel.some(x => x.body.duplicate)).toBeTruthy(); expect(parallel[0].body.source.id).toBe(parallel[1].body.source.id);
-  const stranger = await browser.newPage(); await signUp(stranger, credentials('import-b'));
+  const stranger = await browser.newPage(); await stranger.addInitScript(()=>localStorage.setItem('lumen.welcome.v1','seen')); await signUp(stranger, credentials('import-b'));
   expect(await stranger.evaluate(async ({ id, sourceId }) => (await fetch('/api/notebooks/' + id + '/sources/' + sourceId)).status, { id, sourceId: txt.body.source.id })).toBe(404);
   expect(await stranger.evaluate(async ({ id, sourceId }) => (await fetch('/api/notebooks/' + id + '/sources/' + sourceId, { method: 'DELETE' })).status, { id, sourceId: txt.body.source.id })).toBe(404);
   const ownerTxt = await page.evaluate(async ({ id, sourceId }) => { const r = await fetch('/api/notebooks/' + id + '/sources/' + sourceId); return { status: r.status, body: await r.json() }; }, { id, sourceId: txt.body.source.id });

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './test-fixture';
 
 test('Besuchersitzung und Notebook-CRUD bleiben nach Reload erhalten', async ({ page }) => {
   const suffix = Date.now().toString(36);

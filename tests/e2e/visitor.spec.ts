@@ -1,4 +1,4 @@
-import {test,expect} from '@playwright/test';
+import {test,expect} from './test-fixture';
 test('own upload, streamed citations, reload and independent visitor isolation',async({page,browser,baseURL,isMobile},testInfo)=>{
  await page.goto('/');
  await page.getByText('Notebooks wechseln',{exact:true}).click();await expect(page.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
@@ -18,7 +18,7 @@ test('own upload, streamed citations, reload and independent visitor isolation',
  await page.screenshot({path:testInfo.outputPath('visitor-citation.png'),fullPage:true}); await page.reload();
  await expect(page.getByText('Lokale Chatantwort mit Beleg', {exact:false}).first()).toBeVisible();
  const sources=(await (await page.request.get('/api/notebooks/'+id+'/sources')).json()).sources;const source=sources[0];expect((await page.request.get('/api/notebooks/'+id+'/sources/'+source.id+'?download=1')).status()).toBe(200);
- const other=await browser.newContext();const p=await other.newPage();await p.goto(baseURL!);
+ const other=await browser.newContext();const p=await other.newPage();await p.goto(baseURL!);await p.getByRole('button',{name:'Erst einmal umsehen'}).click();
  await p.getByText('Notebooks wechseln',{exact:true}).click();await expect(p.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
  const own=(await (await p.request.get(baseURL+'/api/notebooks')).json()).notebooks;expect(own[0].id).not.toBe(id);
  for(const suffix of ['/sources','/sources/'+source.id,'/sources/'+source.id+'?download=1','/history','/artifacts'])expect((await p.request.get(baseURL+'/api/notebooks/'+id+suffix)).status()).toBe(404);
@@ -62,7 +62,7 @@ test('deleting unselected source preserves selected source and deleting all disa
  await expect(page.getByRole('button',{name:'keep.txt Bereit · Text',exact:true})).toHaveCount(0);
  if(isMobile)await page.getByRole('button',{name:'Quellen schließen'}).click();
  await expect(page.locator('.disclaimer')).toContainText('0 Quellen ausgewählt');
- await page.getByLabel('Frage an deine Quellen').fill('Weitere Frage');await expect(page.getByRole('button',{name:'Frage senden'})).toBeDisabled();
+ await expect(page.getByLabel('Frage an deine Quellen')).toBeDisabled();await expect(page.getByRole('button',{name:'Frage senden'})).toBeDisabled();
 });
 test('simultaneous first visits in two tabs share one workspace with Web Locks',async({context,baseURL})=>{
  const a=await context.newPage(),b=await context.newPage(); const initialLoads:Promise<any>[]=[];const issuedCookies:Promise<boolean>[]=[];for(const tab of [a,b])tab.on('response',response=>{if(response.url().endsWith('/api/notebooks')&&response.request().method()==='GET')initialLoads.push(response.json());if(response.url().endsWith('/api/session'))issuedCookies.push(response.allHeaders().then(headers=>!!headers['set-cookie']?.includes('notebook_visitor=')));});
