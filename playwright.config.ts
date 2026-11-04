@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const requiredPublicEnv = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY'] as const;
-const supabaseEnv = Object.fromEntries(requiredPublicEnv.map(name => [name, process.env[name] ?? '']));
+const supabaseEnv = Object.fromEntries(requiredPublicEnv.map(name => [name, process.env[name] ?? (name === 'NEXT_PUBLIC_SUPABASE_URL' ? 'https://preview-auth-test.supabase.co' : 'test-public-anon-key')]));
 
 export default defineConfig({
   globalSetup: './tests/e2e/provider-mock.ts',
