@@ -33,3 +33,20 @@ test('initialization is distinct; simultaneous tab dismissal persists only on ac
  await expect(page.locator('.welcome-dialog')).toBeVisible();const tab=await context.newPage();await tab.goto('/');await expect(tab.locator('.welcome-dialog')).toBeVisible();
  await page.getByRole('button',{name:'Erst einmal umsehen'}).click();await expect(tab.locator('.welcome-dialog')).toHaveCount(0);await tab.close();
 });
+test('dialog geometry remains centered with safe margins on desktop and small viewport',async({page})=>{
+ await page.goto('/');const modal=page.locator('.welcome-dialog');await expect(modal).toBeVisible();
+ for(const viewport of [{width:1440,height:900},{width:390,height:844},{width:320,height:480}]){
+  await page.setViewportSize(viewport);const b=await modal.boundingBox();expect(b).not.toBeNull();
+  expect(b!.x).toBeGreaterThanOrEqual(16);expect(b!.y).toBeGreaterThanOrEqual(16);
+  expect(b!.x+b!.width).toBeLessThanOrEqual(viewport.width-16);expect(b!.y+b!.height).toBeLessThanOrEqual(viewport.height-16);
+  expect(Math.abs(b!.x+b!.width/2-viewport.width/2)).toBeLessThanOrEqual(1);
+  expect(Math.abs(b!.y+b!.height/2-viewport.height/2)).toBeLessThanOrEqual(1);
+  expect(await modal.evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);
+ }
+ await modal.getByRole('button',{name:'Erst einmal umsehen'}).click();await expect(modal).toHaveCount(0);
+});
+test('initialization card has panel insets and upload is visibly unavailable',async({page,isMobile})=>{
+ await page.route('**/api/session',()=>{});await page.goto('/');
+ await expect(page.getByRole('button',{name:'Upload nach Einrichtung verfügbar'})).toBeDisabled();
+ if(!isMobile){const card=await page.locator('.sources>.initialization-card').boundingBox();const panel=await page.locator('.sources').boundingBox();expect(card!.x-panel!.x).toBeGreaterThanOrEqual(16);expect(panel!.x+panel!.width-card!.x-card!.width).toBeGreaterThanOrEqual(16)}
+});
