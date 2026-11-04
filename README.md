@@ -42,6 +42,6 @@ Repository, funktionsfähige Live-Demo und Loom-Video bis zehn Minuten. Staging 
 
 Gleichzeitige Erstbesuche werden in den Chromium-Desktop-/Mobile-Tests mit Web Locks geprüft. Ohne Web-Locks-Unterstützung ist der Erstbesuch tabübergreifend nicht atomar; eine allgemeine race-freie Garantie wird nicht gegeben. Der Notebook-Bootstrap selbst ist pro bestehender Besucherkennung datenbankseitig serialisiert.
 
-HTTPS/Secure ist per Unit-Test über den weitergegebenen HTTPS-Header geprüft. Die Browserabnahme läuft lokal über HTTP; ein echter HTTPS-/TLS-Nachweis auf dem späteren Deployment ist noch offen.
+HTTPS/Secure ist per Unit-Test über den weitergegebenen HTTPS-Header geprüft. Zusätzlich wurde die bestehende Preview am 2026-11-04 über echtes HTTPS im Browser geprüft: Secure/HttpOnly/SameSite-Cookie, leerer Einstieg, eigener Upload, echte quellengebundene Antwort, Originalbeleg, Download, Reload und getrennte zweite Sitzung. Normale lokale Browsertests bleiben providerkostenfrei und verwenden HTTP.
 
 Es gibt keinen automatischen Session-Cleanup. Der FK von visitor_provider_limits auf visitor_sessions hat kein ON DELETE CASCADE: Eine spätere administrative Bereinigung muss zunächst die zugehörigen Rate-Zeilen entfernen und bestehende Dateien/Notebooks gezielt berücksichtigen. Cookie-Ablauf löscht keine Bestandsdaten.
