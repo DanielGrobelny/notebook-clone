@@ -13,25 +13,54 @@ function actions(overrides: Partial<Parameters<typeof provisionDemoSources>[0]> 
   };
 }
 
+function expectGenericUnavailable(result: unknown, stage: string) {
+  expect(result).toEqual({ kind: 'unavailable', stage, errorCode: 'demo_sources_unavailable' });
+  expect(JSON.stringify(result)).not.toContain('internal provider or database detail');
+  expect(result).not.toHaveProperty('error');
+  expect(result).not.toHaveProperty('message');
+  expect(result).not.toHaveProperty('cause');
+}
+
 describe('demo provisioning', () => {
-  it('does not claim ready when model configuration is absent', async () => {
+  it('does not call a provider when model configuration is absent', async () => {
     const setup = actions({ configured: false });
-    await expect(provisionDemoSources(setup)).resolves.toEqual({ kind: 'unavailable', stage: 'configuration', errorCode: 'demo_sources_unavailable' });
+    expectGenericUnavailable(await provisionDemoSources(setup), 'configuration');
     expect(setup.claimQuota).not.toHaveBeenCalled();
     expect(setup.embed).not.toHaveBeenCalled();
   });
 
-  it('classifies a provider authentication failure without exposing it', async () => {
-    const setup = actions({ embed: vi.fn().mockRejectedValue(new Error('401 invalid API key')) });
-    await expect(provisionDemoSources(setup)).resolves.toEqual({ kind: 'unavailable', stage: 'embedding', errorCode: 'demo_sources_unavailable' });
-    expect(setup.insertSources).not.toHaveBeenCalled();
+  it('returns the quota response without invoking the provider', async () => {
+    const setup = actions({ claimQuota: vi.fn().mockResolvedValue({ allowed: false, retryAfterSeconds: 73 }) });
+    await expect(provisionDemoSources(setup)).resolves.toEqual({ kind: 'rate_limited', retryAfterSeconds: 73 });
+    expect(setup.embed).not.toHaveBeenCalled();
   });
 
-  it('does not claim ready when database persistence fails after embedding', async () => {
-    const setup = actions({ insertSources: vi.fn().mockRejectedValue(new Error('database constraint detail')) });
-    await expect(provisionDemoSources(setup)).resolves.toEqual({ kind: 'unavailable', stage: 'sources', errorCode: 'demo_sources_unavailable' });
+  it('turns a quota exception into a generic unavailable result', async () => {
+    const setup = actions({ claimQuota: vi.fn().mockRejectedValue(new Error('internal provider or database detail')) });
+    expectGenericUnavailable(await provisionDemoSources(setup), 'quota');
+    expect(setup.embed).not.toHaveBeenCalled();
+  });
+
+  for (const [name, action, stage, later] of [
+    ['embedding', 'embed', 'embedding', ['insertSources', 'insertChunks', 'markSourcesReady']],
+    ['source persistence', 'insertSources', 'sources', ['insertChunks', 'markSourcesReady']],
+    ['chunk persistence', 'insertChunks', 'chunks', ['markSourcesReady']],
+    ['ready update', 'markSourcesReady', 'ready', []],
+  ] as const) {
+    it(`returns only the generic code when ${name} fails`, async () => {
+      const setup = actions({ [action]: vi.fn().mockRejectedValue(new Error('internal provider or database detail')) });
+      expectGenericUnavailable(await provisionDemoSources(setup), stage);
+      for (const method of later) expect(setup[method]).not.toHaveBeenCalled();
+    });
+  }
+
+  it('reports ready only after every provisioning stage succeeds', async () => {
+    const setup = actions();
+    await expect(provisionDemoSources(setup)).resolves.toEqual({ kind: 'ready' });
+    expect(setup.claimQuota).toHaveBeenCalledOnce();
     expect(setup.embed).toHaveBeenCalledOnce();
-    expect(setup.insertChunks).not.toHaveBeenCalled();
-    expect(setup.markSourcesReady).not.toHaveBeenCalled();
+    expect(setup.insertSources).toHaveBeenCalledOnce();
+    expect(setup.insertChunks).toHaveBeenCalledOnce();
+    expect(setup.markSourcesReady).toHaveBeenCalledOnce();
   });
 });
