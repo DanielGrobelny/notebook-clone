@@ -1,8 +1,8 @@
 import {test,expect} from '@playwright/test';
 test('own upload, streamed citations, reload and independent visitor isolation',async({page,browser,baseURL,isMobile},testInfo)=>{
  await page.goto('/');
- await expect(page.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
- await expect(page.getByRole('button',{name:'Anmelden',exact:true})).toHaveCount(0);const add=page.getByRole('button',{name:'+ Notebook',exact:true});expect(await add.evaluate(e=>getComputedStyle(e).cursor)).toBe('pointer');await add.focus();expect(await add.evaluate(e=>getComputedStyle(e).outlineStyle)).not.toBe('none');
+ await page.getByText('Notebooks wechseln',{exact:true}).click();await expect(page.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Anmelden',exact:true})).toHaveCount(0);const add=page.getByRole('button',{name:'+ Notebook',exact:true});expect(await add.evaluate(e=>getComputedStyle(e).cursor)).toBe('pointer');await page.keyboard.press('Tab');await add.focus();expect(await add.evaluate(e=>getComputedStyle(e).outlineStyle)).not.toBe('none');
  const notebooks=await (await page.request.get('/api/notebooks')).json();const id=notebooks.notebooks[0].id;
  expect((await (await page.request.get('/api/notebooks/'+id+'/sources')).json()).sources).toHaveLength(0);
  const context=page.context();const cookies=await context.cookies();expect(cookies.find(c=>c.name==='notebook_visitor')).toMatchObject({httpOnly:true,sameSite:'Lax'});
@@ -19,7 +19,7 @@ test('own upload, streamed citations, reload and independent visitor isolation',
  await expect(page.getByText('Lokale Chatantwort mit Beleg', {exact:false}).first()).toBeVisible();
  const sources=(await (await page.request.get('/api/notebooks/'+id+'/sources')).json()).sources;const source=sources[0];expect((await page.request.get('/api/notebooks/'+id+'/sources/'+source.id+'?download=1')).status()).toBe(200);
  const other=await browser.newContext();const p=await other.newPage();await p.goto(baseURL!);
- await expect(p.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
+ await p.getByText('Notebooks wechseln',{exact:true}).click();await expect(p.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
  const own=(await (await p.request.get(baseURL+'/api/notebooks')).json()).notebooks;expect(own[0].id).not.toBe(id);
  for(const suffix of ['/sources','/sources/'+source.id,'/sources/'+source.id+'?download=1','/history','/artifacts'])expect((await p.request.get(baseURL+'/api/notebooks/'+id+suffix)).status()).toBe(404);
  const origin={Origin:baseURL!};
@@ -32,17 +32,17 @@ test('own upload, streamed citations, reload and independent visitor isolation',
  expect((await page.request.get('/api/notebooks/'+id+'/sources/'+source.id)).status()).toBe(404);
 });
 test('subsequent tab reuses established session; cookie loss and tampering never recover old data',async({page,context,baseURL})=>{
- await page.goto('/');await expect(page.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
+ await page.goto('/');await page.getByText('Notebooks wechseln',{exact:true}).click();await expect(page.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
  const old=(await (await page.request.get('/api/notebooks')).json()).notebooks[0].id;
- const tab=await context.newPage();await tab.goto('/');await expect(tab.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
+ const tab=await context.newPage();await tab.goto('/');await tab.getByText('Notebooks wechseln',{exact:true}).click();await expect(tab.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
  expect((await (await tab.request.get(baseURL+'/api/notebooks')).json()).notebooks.map((n:any)=>n.id)).toEqual([old]);await tab.close();
- await context.clearCookies();await page.reload();await expect(page.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
+ await context.clearCookies();await page.reload();await page.getByText('Notebooks wechseln',{exact:true}).click();await expect(page.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
  expect((await page.request.get('/api/notebooks/'+old+'/history')).status()).toBe(404);
- await context.addCookies([{name:'notebook_visitor',value:'tampered',url:baseURL!}]);await page.reload();await expect(page.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
+ await context.addCookies([{name:'notebook_visitor',value:'tampered',url:baseURL!}]);await page.reload();await page.getByText('Notebooks wechseln',{exact:true}).click();await expect(page.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
  expect((await page.request.get('/api/notebooks/'+old+'/history')).status()).toBe(404);
 });
 test('deleting unselected source preserves selected source and deleting all disables chat',async({page,isMobile})=>{
- await page.goto('/');await expect(page.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
+ await page.goto('/');await page.getByText('Notebooks wechseln',{exact:true}).click();await expect(page.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
  if(isMobile)await page.getByRole('button',{name:'Quellen',exact:true}).click();
  for(const name of ['keep.txt','remove.txt']){
   await page.locator('input[type=file]').last().setInputFiles({name,mimeType:'text/plain',buffer:Buffer.from('Testfixture '+name+': Projektstart am 18. November.')});
@@ -67,7 +67,7 @@ test('deleting unselected source preserves selected source and deleting all disa
 test('simultaneous first visits in two tabs share one workspace with Web Locks',async({context,baseURL})=>{
  const a=await context.newPage(),b=await context.newPage(); const initialLoads:Promise<any>[]=[];const issuedCookies:Promise<boolean>[]=[];for(const tab of [a,b])tab.on('response',response=>{if(response.url().endsWith('/api/notebooks')&&response.request().method()==='GET')initialLoads.push(response.json());if(response.url().endsWith('/api/session'))issuedCookies.push(response.allHeaders().then(headers=>!!headers['set-cookie']?.includes('notebook_visitor=')));});
  await Promise.all([a.goto(baseURL!),b.goto(baseURL!)]);
- await Promise.all([expect(a.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible(),expect(b.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible()]);
+ await Promise.all([a.getByText('Notebooks wechseln',{exact:true}).click(),b.getByText('Notebooks wechseln',{exact:true}).click()]);await Promise.all([expect(a.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible(),expect(b.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible()]);
  const initial=await Promise.all(initialLoads);expect(initial).toHaveLength(2);expect(initial[0].notebooks[0].id).toBe(initial[1].notebooks[0].id);expect((await Promise.all(issuedCookies)).filter(Boolean)).toHaveLength(1); const [aa,bb]=await Promise.all([a.request.get(baseURL+'/api/notebooks'),b.request.get(baseURL+'/api/notebooks')]);
  const an=(await aa.json()).notebooks,bn=(await bb.json()).notebooks;expect(an).toHaveLength(1);expect(bn).toHaveLength(1);expect(an[0].id).toBe(bn[0].id);
  expect(await a.locator('.topbar .notebook').textContent()).toBe(await b.locator('.topbar .notebook').textContent());

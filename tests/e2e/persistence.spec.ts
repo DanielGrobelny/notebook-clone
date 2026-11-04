@@ -11,13 +11,13 @@ test('Besuchersitzung und Notebook-CRUD bleiben nach Reload erhalten', async ({ 
 
 
 
-  await expect(page.getByRole('button', { name: 'Mein Notebook',exact:true })).toBeVisible();
+  await page.getByText('Notebooks wechseln',{exact:true}).click();await expect(page.getByRole('button', { name: 'Mein Notebook',exact:true })).toBeVisible();
 
   page.once('dialog', dialog => dialog.accept(initial));
-  await page.getByRole('button', { name: '+ Notebook' }).click();
+  await page.getByRole('button', { name: '+ Notebook' }).click();await page.getByText('Notebooks wechseln',{exact:true}).click();
   await expect(page.getByRole('button', { name: initial, exact: true })).toBeVisible();
 
-  await page.reload();
+  await page.reload();await page.getByText('Notebooks wechseln',{exact:true}).click();
   await expect(page.getByRole('button', { name: initial, exact: true })).toBeVisible();
 
   page.once('dialog', dialog => dialog.accept(renamed));

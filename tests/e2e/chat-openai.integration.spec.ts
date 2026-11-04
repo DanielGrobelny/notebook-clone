@@ -6,7 +6,7 @@ test('Browser → App-Route → OpenAI → UI stream liefert quellengebundene An
   const stamp = Date.now().toString(36); const email = 'chat-stream-' + stamp + '@example.test'; const password = 'Chat-stream-test-2026!';
   let userId: string | undefined; let notebookId: string | undefined;
   try {
-    await page.goto('/');    await expect(page.getByRole('button', { name: 'Mein Notebook',exact:true })).toBeVisible();
+    await page.goto('/');    await page.getByText('Notebooks wechseln',{exact:true}).click();await expect(page.getByRole('button', { name: 'Mein Notebook',exact:true })).toBeVisible();
     notebookId=(await (await page.request.get('/api/notebooks')).json()).notebooks[0].id;
     const importResult = await page.evaluate(async id => { const f = new FormData(); f.set('text', 'Das Projektsignal lautet ORION-42.'); const r = await fetch('/api/notebooks/' + id + '/sources', { method: 'POST', body: f }); return { status: r.status, body: await r.json() }; }, notebookId);
     expect(importResult.status).toBe(201);

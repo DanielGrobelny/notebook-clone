@@ -6,7 +6,7 @@ export async function setupRealSource(page: Page, isMobile: boolean, label: stri
 
 
 
-  await expect(page.getByRole('button', { name: 'Mein Notebook',exact:true })).toBeVisible();
+  await page.getByText('Notebooks wechseln',{exact:true}).click();await expect(page.getByRole('button', { name: 'Mein Notebook',exact:true })).toBeVisible();
   page.once('dialog', dialog => dialog.accept(`E2E ${label} ${suffix}`));
   const created = page.waitForResponse(response => response.url().includes('/api/notebooks') && response.request().method() === 'POST');
   await page.getByRole('button', { name: '+ Notebook' }).click();

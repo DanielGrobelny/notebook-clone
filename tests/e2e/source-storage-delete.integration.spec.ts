@@ -39,7 +39,7 @@ test('Source: App-Import und App-Löschung hinterlassen Storage und Chunks konsi
 
 
 
-    await expect(page.getByRole('button', { name: 'Mein Notebook',exact:true })).toBeVisible();
+    await page.getByText('Notebooks wechseln',{exact:true}).click();await expect(page.getByRole('button', { name: 'Mein Notebook',exact:true })).toBeVisible();
     notebookId=(await (await page.request.get('/api/notebooks')).json()).notebooks[0].id;
     const first = await postSource(page, notebookId!);
     expect(first.status).toBe(201);
