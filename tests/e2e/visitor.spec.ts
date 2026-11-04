@@ -2,16 +2,16 @@ import {test,expect} from '@playwright/test';
 test('own upload, streamed citations, reload and independent visitor isolation',async({page,browser,baseURL,isMobile},testInfo)=>{
  await page.goto('/');
  await expect(page.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
- await expect(page.getByRole('button',{name:'Anmelden',exact:true})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Anmelden',exact:true})).toHaveCount(0);const add=page.getByRole('button',{name:'+ Notebook',exact:true});expect(await add.evaluate(e=>getComputedStyle(e).cursor)).toBe('pointer');await add.focus();expect(await add.evaluate(e=>getComputedStyle(e).outlineStyle)).not.toBe('none');
  const notebooks=await (await page.request.get('/api/notebooks')).json();const id=notebooks.notebooks[0].id;
  expect((await (await page.request.get('/api/notebooks/'+id+'/sources')).json()).sources).toHaveLength(0);
  const context=page.context();const cookies=await context.cookies();expect(cookies.find(c=>c.name==='notebook_visitor')).toMatchObject({httpOnly:true,sameSite:'Lax'});
  const file={name:'visitor-proof.txt',mimeType:'text/plain',buffer:Buffer.from('Das Testprojekt startet am 18. November. Die verantwortliche Person ist Ada. Dies ist ausschließlich eine Testfixture.')};
  if(isMobile)await page.getByRole('button',{name:'Quellen',exact:true}).click(); await page.locator('input[type=file]').last().setInputFiles(file);
  await expect(page.getByRole('button',{name:/visitor-proof.txt Bereit/}).last()).toBeVisible({timeout:20000});
- await page.getByRole('button',{name:/visitor-proof.txt Bereit/}).last().click();
+ await expect(page.getByRole('button',{name:/visitor-proof.txt Bereit/}).last()).toHaveAttribute('aria-pressed','true');
  if(isMobile)await page.getByRole('button',{name:'Quellen schließen'}).click(); await page.getByLabel('Frage an deine Quellen').fill('Wann startet das Testprojekt?');
- await page.getByRole('button',{name:'Frage senden'}).click();
+ if(isMobile)await page.getByRole('button',{name:'Frage senden'}).click();else await page.getByLabel('Frage an deine Quellen').press('Enter');
  await expect(page.getByRole('button',{name:/^Beleg/}).first()).toBeVisible({timeout:20000});
  await page.getByRole('button',{name:/^Beleg/}).first().click();
  await expect(page.getByRole('dialog',{name:'Belegpassage'})).toContainText('18. November');
@@ -48,7 +48,7 @@ test('deleting unselected source preserves selected source and deleting all disa
   await page.locator('input[type=file]').last().setInputFiles({name,mimeType:'text/plain',buffer:Buffer.from('Testfixture '+name+': Projektstart am 18. November.')});
   await expect(page.getByRole('button',{name:name+' Bereit · Text',exact:true}).last()).toBeVisible();
  }
- await page.getByRole('button',{name:'keep.txt Bereit · Text',exact:true}).last().click();
+ await page.getByRole('button',{name:'remove.txt Bereit · Text',exact:true}).last().click();
  page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'remove.txt löschen',exact:true}).last().click();
  await expect(page.getByRole('button',{name:'remove.txt Bereit · Text',exact:true})).toHaveCount(0);
  await expect(page.getByRole('button',{name:'keep.txt Bereit · Text',exact:true}).last()).toHaveAttribute('aria-pressed','true');

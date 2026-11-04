@@ -18,6 +18,6 @@ export async function setupRealSource(page: Page, isMobile: boolean, label: stri
     name: 'e2e-quelle.txt', mimeType: 'text/plain', buffer: Buffer.from('E2E-Quelleninhalt für sichere Transporttests. '+label),
   });
   await expect(scope.getByText('e2e-quelle.txt', { exact: true })).toBeVisible();
-  await scope.getByRole('button', { name: 'e2e-quelle.txt Bereit · Text', exact: true }).click();
+  await expect(scope.getByRole('button', { name: 'e2e-quelle.txt Bereit · Text', exact: true })).toHaveAttribute('aria-pressed','true');
   if (isMobile) await page.getByRole('button', { name: 'Quellen schließen' }).click();
 }

@@ -5,7 +5,7 @@ export const sourceLimits = {
   maxChunks: 1000,
   chunkCharacters: 1800,
 };
-export type Extracted = { text: string; sections: Array<{ text: string; page: number | null; section: string | null }> };
+export class PdfRuntimeError extends Error { readonly status=503; readonly code='pdf_parser_unavailable'; constructor(){super('Die PDF-Verarbeitung ist serverseitig nicht verfügbar. Bitte später erneut versuchen.');} } export type Extracted = { text: string; sections: Array<{ text: string; page: number | null; section: string | null }> };
 const allowed = new Map([['text/plain', 'txt'], ['text/markdown', 'md'], ['application/pdf', 'pdf']]);
 export function safeFilename(name: string) {
   const clean = name.normalize('NFKC').replace(/[^a-zA-Z0-9._ -]/g, '_').replace(/\.{2,}/g, '.').trim().slice(0, 120);
@@ -42,12 +42,15 @@ export async function extractText(bytes: Uint8Array, mime: string): Promise<Extr
         constructor(values?: number[]) { if (values) [this.a, this.b, this.c, this.d, this.e, this.f] = values; }
       };
     }
-    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
-    const task = pdfjs.getDocument({ data: bytes.slice(), disableWorker: true, stopAtErrors: false });
+    /* Explicit import ensures the worker is traced into serverless output. */ (globalThis as any).pdfjsWorker = await import('pdfjs-dist/legacy/build/pdf.worker.mjs'); const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+    const task = pdfjs.getDocument({ data: bytes.slice(), stopAtErrors: false });
     documentProxy = await task.promise;
   } catch (error: any) {
     if (error?.name === 'PasswordException') throw new Error('Dieses PDF ist passwortgeschützt.');
-    throw new Error("Das PDF ist beschädigt oder kann nicht gelesen werden.");
+    if (error?.name === 'InvalidPDFException') throw new Error('Das PDF ist beschädigt oder kann nicht gelesen werden.');
+    const message=String(error?.message??'');
+    console.error(JSON.stringify({event:'pdf_parser_startup_failed',name:String(error?.name??'Error').slice(0,40),workerSetup:message.includes('Setting up fake worker failed'),missingModule:message.includes('Cannot find module'),missingWorker:message.includes('pdf.worker.mjs')}));
+    throw new PdfRuntimeError();
   }
   try {
     if (documentProxy.numPages > sourceLimits.maxPages) throw new Error('Zu viele PDF-Seiten.');
@@ -65,6 +68,11 @@ export async function extractText(bytes: Uint8Array, mime: string): Promise<Extr
     }
     if (!sections.length) throw new Error('Dieses PDF enthält keinen extrahierbaren Text. Gescannte PDFs und OCR werden nicht unterstützt.');
     return { text: sections.map((section) => section.text).join('\n'), sections };
+  } catch(error:any) {
+    if(error?.message==='Zu viele PDF-Seiten.' || error?.message==='Der Text ist zu lang.' || error?.message?.startsWith('Dieses PDF enthält keinen extrahierbaren Text.'))throw error;
+    if(error?.name==='InvalidPDFException')throw new Error('Das PDF ist beschädigt oder kann nicht gelesen werden.');
+    console.error(JSON.stringify({event:'pdf_text_extraction_failed',name:String(error?.name??'Error').slice(0,40)}));
+    throw new PdfRuntimeError();
   } finally { await documentProxy?.destroy(); }
 }
 export function chunkExtracted(extracted: Extracted) {
