@@ -12,7 +12,7 @@ export default defineConfig({
   use: { baseURL: 'http://127.0.0.1:4285', trace: 'retain-on-failure', screenshot: 'only-on-failure' },
   // A freshly built, dedicated server prevents a different checkout on 4285 from being reused.
   webServer: {
-    command: 'pnpm start -p 4285',
+    command: 'pnpm build && pnpm start -p 4285',
     url: 'http://127.0.0.1:4285',
     reuseExistingServer: false,
     timeout: 120000,
