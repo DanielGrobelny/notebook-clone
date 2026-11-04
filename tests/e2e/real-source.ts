@@ -3,10 +3,10 @@ import { expect, type Page } from '@playwright/test';
 export async function setupRealSource(page: Page, isMobile: boolean, label: string) {
   const suffix = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   await page.goto('/');
-  await page.getByLabel('E-Mail').fill(`e2e-${label}-${suffix}@example.test`);
-  await page.getByLabel('Passwort').fill('Notebook-e2e-test-2026!');
-  await page.getByRole('button', { name: 'Registrieren' }).click();
-  await expect(page.getByRole('button', { name: '+ Notebook' })).toBeVisible();
+
+
+
+  await expect(page.getByRole('button', { name: 'Mein Notebook',exact:true })).toBeVisible();
   page.once('dialog', dialog => dialog.accept(`E2E ${label} ${suffix}`));
   const created = page.waitForResponse(response => response.url().includes('/api/notebooks') && response.request().method() === 'POST');
   await page.getByRole('button', { name: '+ Notebook' }).click();

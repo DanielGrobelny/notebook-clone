@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { chatLimits } from '../app/chat-limits';
 import { chatRequestSchema } from '../app/chat-contract';
-import { canSubmit, demoSources, toggleSource } from '../app/notebook';
+import { canSubmit, toggleSource } from '../app/notebook';
 describe('Notebook-Logik', () => {
-  it('kennzeichnet alle Beispieldaten', () => expect(demoSources.every((source) => source.detail.includes('Demoquelle'))).toBe(true));
   it('schaltet Quellen um', () => expect(toggleSource(['strategy'], 'strategy')).toEqual([]));
   it('erfordert Frage und Quelle', () => { expect(canSubmit('', ['strategy'])).toBe(false); expect(canSubmit('x', [])).toBe(false); expect(canSubmit('x', ['strategy'])).toBe(true); });
 });

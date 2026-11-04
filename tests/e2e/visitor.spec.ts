@@ -1,0 +1,75 @@
+import {test,expect} from '@playwright/test';
+test('own upload, streamed citations, reload and independent visitor isolation',async({page,browser,baseURL,isMobile},testInfo)=>{
+ await page.goto('/');
+ await expect(page.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Anmelden',exact:true})).toHaveCount(0);
+ const notebooks=await (await page.request.get('/api/notebooks')).json();const id=notebooks.notebooks[0].id;
+ expect((await (await page.request.get('/api/notebooks/'+id+'/sources')).json()).sources).toHaveLength(0);
+ const context=page.context();const cookies=await context.cookies();expect(cookies.find(c=>c.name==='notebook_visitor')).toMatchObject({httpOnly:true,sameSite:'Lax'});
+ const file={name:'visitor-proof.txt',mimeType:'text/plain',buffer:Buffer.from('Das Testprojekt startet am 18. November. Die verantwortliche Person ist Ada. Dies ist ausschließlich eine Testfixture.')};
+ if(isMobile)await page.getByRole('button',{name:'Quellen',exact:true}).click(); await page.locator('input[type=file]').last().setInputFiles(file);
+ await expect(page.getByRole('button',{name:/visitor-proof.txt Bereit/}).last()).toBeVisible({timeout:20000});
+ await page.getByRole('button',{name:/visitor-proof.txt Bereit/}).last().click();
+ if(isMobile)await page.getByRole('button',{name:'Quellen schließen'}).click(); await page.getByLabel('Frage an deine Quellen').fill('Wann startet das Testprojekt?');
+ await page.getByRole('button',{name:'Frage senden'}).click();
+ await expect(page.getByRole('button',{name:/^Beleg/}).first()).toBeVisible({timeout:20000});
+ await page.getByRole('button',{name:/^Beleg/}).first().click();
+ await expect(page.getByRole('dialog',{name:'Belegpassage'})).toContainText('18. November');
+ await page.screenshot({path:testInfo.outputPath('visitor-citation.png'),fullPage:true}); await page.reload();
+ await expect(page.getByText('Lokale Chatantwort mit Beleg', {exact:false}).first()).toBeVisible();
+ const sources=(await (await page.request.get('/api/notebooks/'+id+'/sources')).json()).sources;const source=sources[0];expect((await page.request.get('/api/notebooks/'+id+'/sources/'+source.id+'?download=1')).status()).toBe(200);
+ const other=await browser.newContext();const p=await other.newPage();await p.goto(baseURL!);
+ await expect(p.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
+ const own=(await (await p.request.get(baseURL+'/api/notebooks')).json()).notebooks;expect(own[0].id).not.toBe(id);
+ for(const suffix of ['/sources','/sources/'+source.id,'/sources/'+source.id+'?download=1','/history','/artifacts'])expect((await p.request.get(baseURL+'/api/notebooks/'+id+suffix)).status()).toBe(404);
+ const origin={Origin:baseURL!};
+ expect((await p.request.delete(baseURL+'/api/notebooks/'+id+'/sources/'+source.id,{headers:origin})).status()).toBe(404);
+ expect((await p.request.patch(baseURL+'/api/notebooks/'+id,{headers:origin,data:{title:'stolen'}})).status()).toBe(404);
+ expect((await p.request.post(baseURL+'/api/chat',{headers:origin,data:{notebookId:id,sourceIds:[source.id],messages:[{id:'m',role:'user',parts:[{type:'text',text:'Steal data'}]}]}})).status()).toBe(404);
+ expect((await p.request.delete(baseURL+'/api/notebooks/'+id,{headers:{Origin:'https://evil.example'}})).status()).toBe(403);
+ await other.close();
+ expect((await page.request.delete('/api/notebooks/'+id+'/sources/'+source.id,{headers:origin})).status()).toBe(204);
+ expect((await page.request.get('/api/notebooks/'+id+'/sources/'+source.id)).status()).toBe(404);
+});
+test('subsequent tab reuses established session; cookie loss and tampering never recover old data',async({page,context,baseURL})=>{
+ await page.goto('/');await expect(page.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
+ const old=(await (await page.request.get('/api/notebooks')).json()).notebooks[0].id;
+ const tab=await context.newPage();await tab.goto('/');await expect(tab.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
+ expect((await (await tab.request.get(baseURL+'/api/notebooks')).json()).notebooks.map((n:any)=>n.id)).toEqual([old]);await tab.close();
+ await context.clearCookies();await page.reload();await expect(page.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
+ expect((await page.request.get('/api/notebooks/'+old+'/history')).status()).toBe(404);
+ await context.addCookies([{name:'notebook_visitor',value:'tampered',url:baseURL!}]);await page.reload();await expect(page.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
+ expect((await page.request.get('/api/notebooks/'+old+'/history')).status()).toBe(404);
+});
+test('deleting unselected source preserves selected source and deleting all disables chat',async({page,isMobile})=>{
+ await page.goto('/');await expect(page.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();
+ if(isMobile)await page.getByRole('button',{name:'Quellen',exact:true}).click();
+ for(const name of ['keep.txt','remove.txt']){
+  await page.locator('input[type=file]').last().setInputFiles({name,mimeType:'text/plain',buffer:Buffer.from('Testfixture '+name+': Projektstart am 18. November.')});
+  await expect(page.getByRole('button',{name:name+' Bereit · Text',exact:true}).last()).toBeVisible();
+ }
+ await page.getByRole('button',{name:'keep.txt Bereit · Text',exact:true}).last().click();
+ page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'remove.txt löschen',exact:true}).last().click();
+ await expect(page.getByRole('button',{name:'remove.txt Bereit · Text',exact:true})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'keep.txt Bereit · Text',exact:true}).last()).toHaveAttribute('aria-pressed','true');
+ if(isMobile)await page.getByRole('button',{name:'Quellen schließen'}).click();
+ await expect(page.locator('.disclaimer')).toContainText('1 Quellen ausgewählt');
+ await page.getByLabel('Frage an deine Quellen').fill('Wann startet das Projekt?');
+ await page.getByRole('button',{name:'Frage senden'}).click();
+ await expect(page.getByRole('button',{name:/^Beleg/}).first()).toBeVisible();
+ if(isMobile)await page.getByRole('button',{name:'Quellen',exact:true}).click();
+ page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'keep.txt löschen',exact:true}).last().click();
+ await expect(page.getByRole('button',{name:'keep.txt Bereit · Text',exact:true})).toHaveCount(0);
+ if(isMobile)await page.getByRole('button',{name:'Quellen schließen'}).click();
+ await expect(page.locator('.disclaimer')).toContainText('0 Quellen ausgewählt');
+ await page.getByLabel('Frage an deine Quellen').fill('Weitere Frage');await expect(page.getByRole('button',{name:'Frage senden'})).toBeDisabled();
+});
+test('simultaneous first visits in two tabs share one workspace with Web Locks',async({context,baseURL})=>{
+ const a=await context.newPage(),b=await context.newPage(); const initialLoads:Promise<any>[]=[];const issuedCookies:Promise<boolean>[]=[];for(const tab of [a,b])tab.on('response',response=>{if(response.url().endsWith('/api/notebooks')&&response.request().method()==='GET')initialLoads.push(response.json());if(response.url().endsWith('/api/session'))issuedCookies.push(response.allHeaders().then(headers=>!!headers['set-cookie']?.includes('notebook_visitor=')));});
+ await Promise.all([a.goto(baseURL!),b.goto(baseURL!)]);
+ await Promise.all([expect(a.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible(),expect(b.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible()]);
+ const initial=await Promise.all(initialLoads);expect(initial).toHaveLength(2);expect(initial[0].notebooks[0].id).toBe(initial[1].notebooks[0].id);expect((await Promise.all(issuedCookies)).filter(Boolean)).toHaveLength(1); const [aa,bb]=await Promise.all([a.request.get(baseURL+'/api/notebooks'),b.request.get(baseURL+'/api/notebooks')]);
+ const an=(await aa.json()).notebooks,bn=(await bb.json()).notebooks;expect(an).toHaveLength(1);expect(bn).toHaveLength(1);expect(an[0].id).toBe(bn[0].id);
+ expect(await a.locator('.topbar .notebook').textContent()).toBe(await b.locator('.topbar .notebook').textContent());
+ await a.close();await b.close();
+});

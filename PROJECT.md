@@ -1,53 +1,23 @@
-# Notebook-Klon – Probeaufgabe
+# Lumen — Everlast-Testaufgabe
 
-## Auftrag
-NotebookLM-Klon; Umsetzung, Umfang und Struktur frei. AI-Tools ausdrücklich erlaubt. Abgabe: GitHub-Repository, Live-Deployment und Loom-Video (maximal 10 Minuten) mit Vorgehen und Live-Test.
+## Verbindlicher MVP (2026-11-04)
 
-## Zeitrahmen
-Start 2026-11-03. Sieben Tage verfügbar; rechnerische Deadline 2026-11-10, genaue Uhrzeit offen. Vorschlag: abgabefähiger Kern in 3–4 fokussierten Arbeitstagen, Rest Puffer.
+Diese Entscheidung ersetzt die bisherige Konto-/Demo-Seed-Planung. Die Anwendung selbst ist die Demo, kein künftiges SaaS. Ohne Startknopf oder Anmeldung öffnet sich ein leerer persönlicher Arbeitsbereich. Eigene TXT-/Markdown-/Text-PDF-Dateien oder eingefügter Text werden importiert, Quellen ausgewählt und quellengebunden befragt. Antworten streamen und enthalten überprüfbare Originalbelege; Notebooks, Quellen, Chat und Studio-Artefakte bleiben erhalten.
 
-## Status
-Planung dokumentiert; technische Basis und Priorisierung bestätigt. Implementierung noch nicht gestartet.
+Persistentes zufälliges HttpOnly-Cookie, 30 Tage, SameSite=Lax, Secure unter HTTPS. Serverseitige Hash-Zuordnung, zusätzliche RLS-/Storage-Besitzprüfung, keine clientseitig behauptete Eigentümerschaft. Keine Supabase Auth-/Account-Voraussetzung, kein OAuth, keine Registrierung/E-Mail-Bestätigung, keine synthetischen Demo-Notebooks, kein Demo-Reset. Alte Auth-Daten bleiben unangetastet und werden nicht neu verteilt. Cookie-Verlust hat keine Recovery; kein Cross-Device-Sync. Details und Migration: README.
 
-## Produktkern
-Quellen pro Notebook sammeln und auswählen; quellengebundener Chat mit überprüfbaren Zitaten; Inhalte in Studio-Artefakte transformieren. Wiedererkennbare Drei-Spalten-Oberfläche: Quellen, Chat, Studio.
+## Architektur und Umfang
 
-## MVP-Vorschlag
-Notebooks; PDF (Text-PDF), TXT/Markdown und eingefügter Text; Importstatus und Fehlerbehandlung; Quellenauswahl; Streaming-Chat; klickbare Belege mit Originalpassage/Seite; ehrliche Antwort bei fehlender Evidenz; gespeicherte Chats; Notizen und Zusammenfassungs-/Briefing-Artefakt; persistente Daten und getrennte Benutzer; isolierter Demo-Einstieg mit Beispieldokumenten.
+Next.js/TypeScript, Supabase PostgreSQL/privater Storage, pgvector, Vercel AI SDK und ein direkter OpenAI-Provider. Browserzugriffe ausschließlich über App-APIs. Keine zusätzliche Provider-Abstraktion, kein Agentenframework. Dokumente sind untrusted Daten, keine Anweisungen. Zitier-ID-Prüfung ersetzt keine semantische Qualitätsprüfung.
 
-## Optional
-Ein Audio-Overview als Wiedererkennungsmerkmal, erst nach stabilem Kern. Alternativ Quiz. URL-Import nur mit SSRF-Schutz und begrenztem Parser-Aufwand.
+Vorhandene Datei-/Request-/Tokenlimits, Timeouts, Abbruch und einfache atomare Besucher-Rate-Limits erhalten; kein Budget-/Billing-System. Guthaben ist kein garantierter Hard Cap. Providerlimits und Auto-Recharge vor öffentlicher Nutzung prüfen, keine automatischen Zahlungsänderungen. Keine sensiblen Dokumente für die öffentliche Demo empfehlen.
 
-## Nicht im ersten Umfang
-Google-Drive-Sync, YouTube/Audio-Import, OCR, Video, Folien, Web-Recherche-Agent, Code-Sandbox, Echtzeit-Kollaboration, Billing.
+Audio, URL-Import, OCR, Sync, Kollaboration und echte Accounts bleiben außerhalb dieses MVP. Kein Zusatzumfang. Die früheren Anforderungen an Supabase Auth, persönliche Demo-Provisionierung und Beispieldokumente sind **ersetzt**, nicht zusätzlich umzusetzen.
 
-## Architekturüberblick
-Next.js/TypeScript/Tailwind; Supabase Auth/PostgreSQL/Storage mit RLS; pgvector-Retrieval mit Quellenauswahl und serverseitiger Autorisierung; Vercel AI SDK als Modellanbindung; keine zusätzliche generische Provider-Abstraktion. Vitest und Playwright. Keine zusätzliche NestJS-App ohne Bedarf. Zitier-IDs werden serverseitig auf tatsächlich abgerufene Passagen validiert; das allein beweist keine semantische Richtigkeit.
+## Abnahme
 
-## Qualitätsnachweise
-Upload bis Antwort bis Quellenbeleg; nicht beantwortbare Frage; widersprüchliche Quellen; Quellen-Abwahl; Tenant-Isolation; ungültige/zu große Dateien; Prompt-Injection aus Dokumenten; Persistenz nach Reload; mobile Darstellung. Kleine feste Evaluationssammlung. Kosten-/Rate-Limits und serverseitige Secrets.
+Unit-/RLS-/Storage-Prüfungen sowie Desktop/Mobile-Browserlauf: leerer Einstieg → eigener Upload → gestreamte Antwort → Beleg → Reload; zweite Sitzung bleibt getrennt; manipulierte Notebook-/Source-/Chat-/Artefakt-/Storage-IDs geben keine fremden Daten frei. Normale Tests nutzen ausschließlich lokalen Provider-Mock und eigene Testressourcen; echter Provider-Smoke nur separat autorisiert.
 
-## Quellen (abgerufen 2026-11-03)
-- https://blog.google/innovation-and-ai/products/gemini-notebook/notebooklm-gemini-notebook/ (Umbenennung 2026-07-16)
-- https://support.google.com/gemininotebook/answer/16164461
-- https://support.google.com/gemininotebook/answer/16206563
-- https://blog.google/innovation-and-ai/products/notebooklm/better-research-notebooklm/
+## Abgabe und Betrieb
 
-## Nächste Entscheidung
-Provider, konkrete Modelle, API-Budget und Demo-Zugang klären. Audio bleibt optional.
-
-## Priorisierung vom 2026-11-03
-Audio bleibt ausdrücklich optional. Zuerst App-Gerüst und echter serverseitiger Modellaufruf mit Streaming, Abbruch und Fehlerbehandlung. Danach Auth/Persistenz, Quellenimport und belegbarer Chat; anschließend Studio, Demo, Evaluation und Abgabe. Provider/Modell und Budget vor Betrieb prüfen. Tests begleiten jedes Arbeitspaket.
-
-## Architekturentscheidung: Vercel AI SDK (2026-11-03)
-Bestätigt: Next.js + TypeScript + Vercel AI SDK + Zod + Supabase/pgvector. AI SDK UI (@ai-sdk/react, useChat) für Chatstatus und Streaming; AI SDK Core (ai, streamText) im serverseitigen Next.js-Route-Handler. Ein direkter Provider über dessen SDK-Paket; Vercel AI Gateway optional, nicht erforderlich. Keine zusätzliche generische Provider-Abstraktion, kein LangChain und kein autonomes Agentenframework im MVP; zentrale Modellkonfiguration genügt.
-
-Ablauf: Frage → Benutzer-/Notebook-Zugriff prüfen → ausschließlich erlaubte und ausgewählte Quellenstellen suchen → Modellaufruf → gestreamte Antwort mit validierten Belegverweisen. Auth, RLS, PDF-Extraktion, Chunking, Retrieval, Persistenz, Zitatprüfung und Kosten-/Rate-Limits bleiben Anwendungslogik; das SDK ersetzt diese nicht. Dokumentinhalt gilt als Daten, nicht als Systemanweisung.
-
-Erster Durchstich: echter Modellaufruf mit eingegebenem Quelltext; danach Dokument-Retrieval integrieren, ohne den Chat neu zu bauen. Schlüssel nur serverseitig; Abbruch, Timeout und Providerfehler testen. Konkreter Provider, Chat-/Embedding-Modell, SDK-Version und API-Budget sind noch offen und vor Implementierung zu prüfen/festzulegen. Audio ausdrücklich optional.
-
-Referenz: https://ai-sdk.dev/docs/getting-started/nextjs-app-router
-
-## Betriebsentscheidung: API-Ausgabenbegrenzung (2026-11-03)
-OpenAI ist der gewählte Modellanbieter. Eine harte monetäre Nutzungsgrenze soll beim API-Anbieter verwaltet werden, nicht als eigene Budgetverwaltung in dieser Anwendung. In der aktuell geprüften Kontooberfläche war keine solche einstellbare Grenze verfügbar; Usage Limits führte zu den Organisations-Limits mit Rate-/Tier-Einstellungen. Dies ist eine beobachtete Konto-/UI-Einschränkung, keine Behauptung, dass OpenAI generell keine Spend Limits unterstützt. Dokumentation und sichtbare Optionen stimmten nicht überein; die Ursache ist ungeklärt.
-Rate Limits (Anfragen/Tokens pro Zeit) und einzelne Output-Tokenlimits sind kein Gesamtbudget. Normale Anwendungs-Schutzmaßnahmen gegen Missbrauch und unkontrollierte Aufrufschleifen bleiben im Scope, ein eigenes Abrechnungssystem nicht. Vor öffentlichem Betrieb muss die anbieterseitige Kostenbegrenzung erneut geprüft werden. Keine automatische Aufladung oder Zahlungsänderung ohne Freigabe.
+GitHub-Repository, Live-Demo, Loom bis zehn Minuten. Start der Aufgabe 2026-11-03, sieben Tage verfügbar; rechnerisch 2026-11-10, genaue Uhrzeit offen. Kein Production-Deployment ohne ausdrückliche Freigabe. Migration und Staging-Konfiguration müssen vor Auslieferung abgestimmt werden; keine gemeinsame Datenbank für Tests migrieren/resetten.

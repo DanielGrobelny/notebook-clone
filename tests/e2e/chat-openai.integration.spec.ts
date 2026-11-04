@@ -1,16 +1,13 @@
-import { readFileSync } from 'node:fs';
-for (const line of readFileSync('.env.local', 'utf8').split('\n')) { const match = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/.exec(line.replace(/\r$/, '')); if (match && !process.env[match[1]]) process.env[match[1]] = match[2].replace(/^['"]|['"]$/g, ''); }
 import { expect, test } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
-const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SERVICE_ROLE_KEY!, { auth: { autoRefreshToken: false, persistSession: false } });
+const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { autoRefreshToken: false, persistSession: false } });
 test.skip(!process.env.RUN_OPENAI_INTEGRATION, 'Set RUN_OPENAI_INTEGRATION=1 for the paid real-provider smoke test');
 test('Browser → App-Route → OpenAI → UI stream liefert quellengebundene Antwort', async ({ page }) => {
   const stamp = Date.now().toString(36); const email = 'chat-stream-' + stamp + '@example.test'; const password = 'Chat-stream-test-2026!';
   let userId: string | undefined; let notebookId: string | undefined;
   try {
-    await page.goto('/'); await page.getByLabel('E-Mail').fill(email); await page.getByLabel('Passwort').fill(password); await page.getByRole('button', { name: 'Registrieren' }).click(); await expect(page.getByRole('button', { name: '+ Notebook' })).toBeVisible();
-    page.once('dialog', d => d.accept('Stream ' + stamp)); await page.getByRole('button', { name: '+ Notebook' }).click();
-    const created = await page.waitForResponse(r => r.url().includes('/api/notebooks') && r.request().method() === 'POST'); notebookId = (await created.json()).notebook.id;
+    await page.goto('/');    await expect(page.getByRole('button', { name: 'Mein Notebook',exact:true })).toBeVisible();
+    notebookId=(await (await page.request.get('/api/notebooks')).json()).notebooks[0].id;
     const importResult = await page.evaluate(async id => { const f = new FormData(); f.set('text', 'Das Projektsignal lautet ORION-42.'); const r = await fetch('/api/notebooks/' + id + '/sources', { method: 'POST', body: f }); return { status: r.status, body: await r.json() }; }, notebookId);
     expect(importResult.status).toBe(201);
     await page.reload();
@@ -25,6 +22,6 @@ test('Browser → App-Route → OpenAI → UI stream liefert quellengebundene An
     console.log(JSON.stringify({ browserChat: { status: response.status(), streamed: true, answerContainsSignal: true } }));
   } finally {
     if (notebookId) await page.evaluate(id => fetch('/api/notebooks/' + id, { method: 'DELETE' }), notebookId).catch(() => undefined);
-    const users = await admin.auth.admin.listUsers(); userId = users.data.users.find(u => u.email === email)?.id; if (userId) await admin.auth.admin.deleteUser(userId);
+
   }
 });

@@ -1,0 +1,3 @@
+import { describe, expect, it, vi } from 'vitest';
+import { ownedNotebook } from '../lib/visitor-owner';
+describe('visitor ownership',()=>{it('always scopes notebook lookup by visitor id',async()=>{const calls:string[][]=[];const chain={eq:(...args:string[])=>{calls.push(args);return chain},maybeSingle:vi.fn().mockResolvedValue({data:null})};const db={from:vi.fn().mockReturnValue({select:()=>chain})};await ownedNotebook(db,'11111111-1111-4111-8111-111111111111','22222222-2222-4222-8222-222222222222');expect(calls).toEqual([['id','11111111-1111-4111-8111-111111111111'],['visitor_id','22222222-2222-4222-8222-222222222222']]);});});

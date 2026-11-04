@@ -1,17 +1,17 @@
 import { expect, test } from '@playwright/test';
 
-test('Registrierung und Notebook-CRUD bleiben nach Reload erhalten', async ({ page }) => {
+test('Besuchersitzung und Notebook-CRUD bleiben nach Reload erhalten', async ({ page }) => {
   const suffix = Date.now().toString(36);
-  const email = 'dan238-ui-' + suffix + '@example.test';
-  const password = 'DAN238-ui-password';
-  const initial = 'DAN238 Notebook ' + suffix;
+  const email = 'visitor-ui-' + suffix + '@example.test';
+  const password = 'Visitor-ui-password';
+  const initial = 'Visitor Notebook ' + suffix;
   const renamed = initial + ' umbenannt';
 
   await page.goto('/');
-  await page.getByLabel('E-Mail').fill(email);
-  await page.getByLabel('Passwort').fill(password);
-  await page.getByRole('button', { name: 'Registrieren' }).click();
-  await expect(page.getByRole('button', { name: '+ Notebook' })).toBeVisible();
+
+
+
+  await expect(page.getByRole('button', { name: 'Mein Notebook',exact:true })).toBeVisible();
 
   page.once('dialog', dialog => dialog.accept(initial));
   await page.getByRole('button', { name: '+ Notebook' }).click();
@@ -21,7 +21,7 @@ test('Registrierung und Notebook-CRUD bleiben nach Reload erhalten', async ({ pa
   await expect(page.getByRole('button', { name: initial, exact: true })).toBeVisible();
 
   page.once('dialog', dialog => dialog.accept(renamed));
-  await page.getByRole('button', { name: initial, exact: true }).click();
+  await page.getByRole('button', { name: initial+' umbenennen', exact: true }).click();
   await expect(page.getByRole('button', { name: renamed, exact: true })).toBeVisible();
 
   page.once('dialog', dialog => dialog.accept());
