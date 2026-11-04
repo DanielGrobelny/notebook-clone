@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './test-fixture';
 import { setupRealSource } from './real-source';
 const sourceId = '22222222-2222-4222-8222-222222222222';
 const chunkId = '33333333-3333-4333-8333-333333333333';

@@ -10,7 +10,7 @@ const sourceId = '22222222-2222-4222-8222-222222222222';
 type State = { storageError: unknown; deleteError: unknown; deleteCalls: number; storageCalls: number };
 function client(state: State) {
   return {
-    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }) },
+    visitor:{id:'test-visitor'},auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }) },
     storage: { from: vi.fn(() => ({ remove: vi.fn(async () => { state.storageCalls++; return { error: state.storageError }; }) })) },
     from: vi.fn((table: string) => {
       if (table !== 'sources') throw new Error('unexpected table ' + table);

@@ -1,11 +1,9 @@
-import { readFileSync } from 'node:fs';
-for (const line of readFileSync('.env.local', 'utf8').split('\n')) { const match = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/.exec(line.replace(/\r$/, '')); if (match && !process.env[match[1]]) process.env[match[1]] = match[2].replace(/^['"]|['"]$/g, ''); }
-import { expect, test } from '@playwright/test';
+import { expect, test } from './test-fixture';
 import { createClient } from '@supabase/supabase-js';
 
-const required = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SERVICE_ROLE_KEY'] as const;
+const required = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY'] as const;
 for (const key of required) if (!process.env[key]) throw new Error('Missing local integration-test configuration: ' + key);
-const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SERVICE_ROLE_KEY!, { auth: { autoRefreshToken: false, persistSession: false } });
+const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { autoRefreshToken: false, persistSession: false } });
 const stamp = Date.now().toString(36);
 const email = `source-storage-${stamp}@example.test`;
 const password = 'Source-storage-test-2026!';
@@ -38,18 +36,11 @@ test('Source: App-Import und App-Löschung hinterlassen Storage und Chunks konsi
   let sourceId: string | undefined;
   try {
     await page.goto('/');
-    await page.getByLabel('E-Mail').fill(email);
-    await page.getByLabel('Passwort').fill(password);
-    await page.getByRole('button', { name: 'Registrieren' }).click();
-    await expect(page.getByRole('button', { name: '+ Notebook' })).toBeVisible();
-    page.once('dialog', dialog => dialog.accept(title));
-    await page.getByRole('button', { name: '+ Notebook' }).click();
-    const created = await page.waitForResponse(response => response.url().includes('/api/notebooks') && response.request().method() === 'POST');
-    notebookId = (await created.json()).notebook.id;
-    const { data: auth } = await admin.auth.admin.listUsers();
-    userId = auth.users.find(user => user.email === email)?.id;
-    expect(userId).toBeTruthy();
 
+
+
+    await page.getByText('Notebooks wechseln',{exact:true}).click();await expect(page.getByRole('button', { name: 'Mein Notebook',exact:true })).toBeVisible();
+    notebookId=(await (await page.request.get('/api/notebooks')).json()).notebooks[0].id;
     const first = await postSource(page, notebookId!);
     expect(first.status).toBe(201);
     sourceId = first.body.source.id;
@@ -75,6 +66,6 @@ test('Source: App-Import und App-Löschung hinterlassen Storage und Chunks konsi
   } finally {
     if (sourceId && notebookId) await page.evaluate(async ({ notebookId, sourceId }) => fetch(`/api/notebooks/${notebookId}/sources/${sourceId}`, { method: 'DELETE' }), { notebookId, sourceId }).catch(() => undefined);
     if (notebookId) await page.evaluate(async id => fetch(`/api/notebooks/${id}`, { method: 'DELETE' }), notebookId).catch(() => undefined);
-    if (userId) await admin.auth.admin.deleteUser(userId);
+
   }
 });
