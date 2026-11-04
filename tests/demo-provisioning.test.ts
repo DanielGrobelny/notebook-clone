@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { provisionDemoSources } from '../lib/demo-provisioning';
+import { mapDemoSourcesByTitle, provisionDemoSources } from '../lib/demo-provisioning';
 
 function actions(overrides: Partial<Parameters<typeof provisionDemoSources>[0]> = {}) {
   return {
@@ -62,5 +62,16 @@ describe('demo provisioning', () => {
     expect(setup.insertSources).toHaveBeenCalledOnce();
     expect(setup.insertChunks).toHaveBeenCalledOnce();
     expect(setup.markSourcesReady).toHaveBeenCalledOnce();
+  });
+});
+
+describe('demo source insert mapping', () => {
+  it('maps source IDs by title when the database returns rows out of order', () => {
+    expect(mapDemoSourcesByTitle(['first', 'second'], [{ id: 'id-second', title: 'second' }, { id: 'id-first', title: 'first' }])).toEqual([{ id: 'id-first' }, { id: 'id-second' }]);
+  });
+
+  it('rejects incomplete or duplicate source rows', () => {
+    expect(mapDemoSourcesByTitle(['first', 'second'], [{ id: 'id-first', title: 'first' }])).toBeNull();
+    expect(mapDemoSourcesByTitle(['first', 'second'], [{ id: 'id-a', title: 'first' }, { id: 'id-b', title: 'first' }])).toBeNull();
   });
 });

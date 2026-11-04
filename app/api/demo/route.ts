@@ -3,7 +3,7 @@ import { createClient } from '../../../lib/supabase/server';
 import { getModelConfiguration } from '../../ai-config';
 import { embedTexts, vectorLiteral } from '../../../lib/embeddings';
 import { claimAnonymousProviderCall } from '../../../lib/anonymous-provider-rate-guard';
-import { provisionDemoSources } from '../../../lib/demo-provisioning';
+import { mapDemoSourcesByTitle, provisionDemoSources } from '../../../lib/demo-provisioning';
 
 const samples = [
   { title: 'Produktstrategie 2026', content: 'Synthetische Demoquelle. Das Team priorisiert klare Zielgruppen, messbare Lernschleifen und einen kleinen ersten Nutzen.' },
@@ -40,9 +40,10 @@ export async function POST() {
       embeddings = await embedTexts(samples.map(sample => sample.content), config.apiKey, undefined, config.baseURL);
     },
     insertSources: async () => {
-      const { data, error: sourceError } = await db.from('sources').insert(samples.map(sample => ({ notebook_id: notebook.id, title: sample.title, source_type: 'text', status: 'processing', byte_size: sample.content.length, page_count: null }))).select('id').order('created_at');
-      if (sourceError || !data || data.length !== samples.length) throw new Error('source_failed');
-      sources = data;
+      const { data, error: sourceError } = await db.from('sources').insert(samples.map(sample => ({ notebook_id: notebook.id, title: sample.title, source_type: 'text', status: 'processing', byte_size: sample.content.length, page_count: null }))).select('id,title');
+      const mapped = mapDemoSourcesByTitle(samples.map(sample => sample.title), data ?? []);
+      if (sourceError || !mapped) throw new Error('source_failed');
+      sources = mapped;
     },
     insertChunks: async () => {
       const { error: chunkError } = await db.from('source_chunks').insert(sources.map((source, index) => ({ source_id: source.id, position: 0, content: samples[index].content, metadata: { section: 'Synthetische Demoquelle' }, embedding: vectorLiteral(embeddings[index]) })));

@@ -39,3 +39,12 @@ export async function provisionDemoSources(actions: DemoProvisioningActions): Pr
     return { kind: 'unavailable', stage, errorCode: 'demo_sources_unavailable' };
   }
 }
+
+/** Maps returned insert rows by their explicit title rather than database row order. */
+export function mapDemoSourcesByTitle(expectedTitles: string[], rows: Array<{ id: string; title: string }>): Array<{ id: string }> | null {
+  if (rows.length !== expectedTitles.length) return null;
+  const idsByTitle = new Map(rows.map(row => [row.title, row.id]));
+  if (idsByTitle.size !== expectedTitles.length) return null;
+  const mapped = expectedTitles.map(title => idsByTitle.get(title));
+  return mapped.every((id): id is string => Boolean(id)) ? mapped.map(id => ({ id })) : null;
+}
