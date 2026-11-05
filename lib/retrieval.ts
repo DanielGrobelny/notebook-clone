@@ -4,22 +4,39 @@ export type RetrievedPassage = { id: string; source_id: string; content: string;
 export type ChatHistoryMessage = { role: 'user' | 'assistant'; content: string };
 export async function scopedSimilaritySearch(db: any, input: { notebookId: string; userId: string; sourceIds: string[]; question: string; apiKey: string; signal?: AbortSignal }) {
   if (input.signal?.aborted) throw new DOMException('The operation was aborted.', 'AbortError');
-  const {data:sources,error:sourceError}=await db.from('sources').select('id,status').eq('notebook_id',input.notebookId).in('id',input.sourceIds); if(sourceError||!sources||sources.length!==new Set(input.sourceIds).size||sources.some((s:any)=>s.status!=='ready'))throw new Error('sources_unavailable'); const [embedding] = await embedTexts([input.question], input.apiKey, input.signal);
+  const sourceIds = [...new Set(input.sourceIds)];
+  if (!sourceIds.length) return [];
+  if (sourceIds.length > 8) throw new Error('too_many_sources');
+  const {data:sources,error:sourceError}=await db.from('sources').select('id,status').eq('notebook_id',input.notebookId).in('id',sourceIds); if(sourceError||!sources||sources.length!==new Set(sourceIds).size||sources.some((s:any)=>s.status!=='ready'))throw new Error('sources_unavailable');
+  const [embedding] = await embedTexts([input.question], input.apiKey, input.signal);
   if (input.signal?.aborted) throw new DOMException('The operation was aborted.', 'AbortError');
-  const { data, error } = await db.rpc('match_source_chunks', { p_notebook_id: input.notebookId, p_user_id: input.userId, p_source_ids: input.sourceIds, p_query_embedding: vectorLiteral(embedding), p_match_count: retrievalLimits.maxChunks });
+  const { data, error } = await db.rpc('match_source_chunks', { p_notebook_id: input.notebookId, p_user_id: input.userId, p_source_ids: sourceIds, p_query_embedding: vectorLiteral(embedding), p_match_count: retrievalLimits.maxChunks });
+  if (input.signal?.aborted) throw new DOMException('The operation was aborted.', 'AbortError');
   if (error) throw error;
   return (data ?? []) as RetrievedPassage[];
 }
 export function buildGroundedContext(passages: RetrievedPassage[]) {
+  // Reserve equal source budgets so a long CV cannot crowd out a job description.
+  const groups = new Map<string, RetrievedPassage[]>();
+  for (const passage of passages.slice(0, retrievalLimits.maxChunks)) {
+    if (!passage.content.trim()) continue;
+    const group = groups.get(passage.source_id) ?? [];
+    group.push(passage); groups.set(passage.source_id, group);
+  }
   const blocks: string[] = []; const included: RetrievedPassage[] = [];
-  for (const passage of passages) {
-    const marker = '[citation:' + passage.id + ']\n';
-    const separator = blocks.length ? '\n\n' : '';
-    const available = retrievalLimits.contextCharacters - blocks.join('').length - separator.length - marker.length;
-    if (available <= 0) break;
-    const content = passage.content.slice(0, available);
-    blocks.push(separator + marker + content);
-    included.push({ ...passage, content });
+  const budget = Math.floor(retrievalLimits.contextCharacters / (groups.size || 1));
+  for (const group of groups.values()) {
+    let remaining = budget;
+    for (const passage of group) {
+      const marker = '[citation:' + passage.id + ']\n';
+      const separator = blocks.length ? '\n\n' : '';
+      const available = remaining - separator.length - marker.length;
+      if (available <= 0) break;
+      const content = passage.content.slice(0, available);
+      blocks.push(separator + marker + content);
+      included.push({ ...passage, content });
+      remaining -= separator.length + marker.length + content.length;
+    }
   }
   return { passages: included, context: blocks.join('') };
 }

@@ -27,7 +27,7 @@ Streaming über AI SDK/OpenAI Responses, nur ausgewählte eigene Quellen, maxima
 ## Tests ohne Providerkosten
 
 - pnpm test: Unit-Tests; reale DB-Tests ohne explizites Opt-in übersprungen.
-- pnpm test:visitor: vollständiger reproduzierbarer Prüflauf. Eigene temporäre Docker-Netzwerk-/Containerinstanzen; PostgreSQL/pgvector und Storage-Daten nur im RAM; alle Migrationen, Bestandserhalt, echte RLS-/Storage-Isolation, Unit/Typecheck/Build und Playwright Desktop/Mobile. Danach ausschließlich eigene Testcontainer entfernen. Benötigt Docker, Browserinstallation und freie lokale Ports 4285/4286/55821/55823/55824; keine bestehende Datenbank oder Secrets werden übernommen. Gepinnte Container-Tags werden bei Bedarf heruntergeladen.
+- pnpm test:visitor: vollständiger reproduzierbarer Prüflauf. Eigene temporäre Docker-Netzwerk-/Containerinstanzen; PostgreSQL/pgvector und Storage-Daten nur im RAM; alle Migrationen, Bestandserhalt, echte RLS-/Storage-Isolation, Unit/Typecheck/Build und Playwright Desktop/Mobile. Danach ausschließlich eigene Testcontainer entfernen. Benötigt Docker, Browserinstallation und freie lokale Ports 4385/4386/56821/56823/56824; keine bestehende Datenbank oder Secrets werden übernommen. Gepinnte Container-Tags werden bei Bedarf heruntergeladen.
 - pnpm test:e2e: für eine explizit bereitgestellte isolierte Datenbank; Testserver und lokaler Provider-Mock werden gestartet. Keine externen Modellaufrufe.
 - pnpm test:storage: separater realer Datei-/Chunk-Import-/Löschtest auf derselben isolierten Testkonfiguration.
 - pnpm test:integration:openai: **kostenpflichtiger**, separat zu autorisierender Opt-in-Smoke. Keine Ausführung als Teil normaler Tests.
@@ -57,3 +57,7 @@ Zusätzlich zu kleinen deterministischen PDF-Fixtures können über REAL_PDF_FIX
 Der Chat ist erst mit mindestens einer ausgewählten, fertig verarbeiteten Quelle bedienbar (Eingabe, Senden und Enter). Nach Import wird die fertige Quelle ausgewählt; Abwahl oder Löschen sperrt wieder. Initialisierung, Uploadverarbeitung und fehlende Auswahl sind getrennte Zustände.
 
 Ein zugänglicher Willkommensdialog erscheint nach erfolgreichem Bootstrap beim ersten Besuch. Erst Schließen/Escape/CTA setzt den versionierten lokalen Browsermarker `lumen.welcome.v1`. Weitere Tabs übernehmen das Schließen über das Storage-Ereignis. Ohne verfügbaren Browserstorage bleibt die App benutzbar; nach einem Reload kann das Willkommen erneut erscheinen. Der Marker ist keine Anmeldung und ersetzt nicht das HttpOnly-Sitzungscookie. Backendfehler werden ohne vorgeschaltetes Modal mit Retry angezeigt.
+
+### Quellenvergleich
+
+Die Vektorsuche materialisiert ausschließlich autorisierte ausgewählte fertige Quellen vor exakter Distanzberechnung. Besucher- und historische Auth-Scopes bleiben erhalten. Quellenweise Rangfolge und faire Kontextbudgets verhindern Verdrängung (maximal zwölf Abschnitte/12.000 Zeichen). Leere Auswahl ruft keinen Provider auf; ungültige Quellen bleiben sources_unavailable. Migration 20261105090000 und App gemeinsam ausrollen.
