@@ -27,7 +27,7 @@ test('composer remains in viewport through long history, reload and reflow',asyn
  await page.getByLabel('Frage an deine Quellen').fill(('Mehrzeilige Frage'+String.fromCharCode(10)).repeat(20));await bounds();expect(await page.locator('#question').evaluate(el=>el.scrollHeight>el.clientHeight)).toBe(true);
  await page.locator('.citation').last().click();await expect(page.getByRole('dialog',{name:'Belegpassage'})).toBeVisible();await page.getByRole('dialog',{name:'Belegpassage'}).getByRole('button').click();await bounds();
  
- await page.setViewportSize({width:1280,height:800});await page.evaluate(()=>document.documentElement.style.zoom='2');await bounds();await page.evaluate(()=>document.documentElement.style.zoom='');
+ /* 200% browser zoom reflows into half the CSS viewport, unlike CSS zoom. */ await page.setViewportSize({width:640,height:400});await bounds();await page.setViewportSize({width:1280,height:800});
  await page.getByLabel('Frage an deine Quellen').fill('');await page.getByLabel('Frage an deine Quellen').focus();await page.keyboard.press('Shift+Tab');expect(await page.locator('#question').evaluate(el=>el===document.activeElement)).toBe(false);
  await page.getByText('Notebooks wechseln',{exact:true}).click();const notebookName=await page.locator('.notebook-menu li button').filter({hasText:'E2E synthetic layout source'}).first().innerText();await page.getByRole('button',{name:'Mein Notebook',exact:true}).click();await expect(page.locator('.answer-text')).toHaveCount(0);await bounds();await page.getByRole('button',{name:notebookName,exact:true}).click();await expect(page.locator('.answer-text')).toHaveCount(2);await expect.poll(distance).toBeLessThan(5);await bounds();
 
