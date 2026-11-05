@@ -10,7 +10,7 @@ Persistentes zufälliges HttpOnly-Cookie, 30 Tage, SameSite=Lax, Secure unter HT
 
 Next.js/TypeScript, Supabase PostgreSQL/privater Storage, pgvector, Vercel AI SDK und ein direkter OpenAI-Provider. Browserzugriffe ausschließlich über App-APIs. Keine zusätzliche Provider-Abstraktion, kein Agentenframework. Dokumente sind untrusted Daten, keine Anweisungen. Zitier-ID-Prüfung ersetzt keine semantische Qualitätsprüfung.
 
-Vorhandene Datei-/Request-/Tokenlimits, Timeouts, Abbruch und einfache atomare Besucher-Rate-Limits erhalten; kein Budget-/Billing-System. Guthaben ist kein garantierter Hard Cap. Providerlimits und Auto-Recharge vor öffentlicher Nutzung prüfen, keine automatischen Zahlungsänderungen. Keine sensiblen Dokumente für die öffentliche Demo empfehlen.
+Vorhandene Datei-/Requestlimits, Timeouts, Abbruch und einfache atomare Besucher-Rate-Limits erhalten; für vollständige Chatantworten wird der initiale 800-Token-Demowert durch ein weiterhin begrenztes 4096-Token-Budget mit Längensteuerung ersetzt (höheres mögliches Outputkostenvolumen, siehe README); kein Budget-/Billing-System. Guthaben ist kein garantierter Hard Cap. Providerlimits und Auto-Recharge vor öffentlicher Nutzung prüfen, keine automatischen Zahlungsänderungen. Keine sensiblen Dokumente für die öffentliche Demo empfehlen.
 
 Audio, URL-Import, OCR, Sync, Kollaboration und echte Accounts bleiben außerhalb dieses MVP. Kein Zusatzumfang. Die früheren Anforderungen an Supabase Auth, persönliche Demo-Provisionierung und Beispieldokumente sind **ersetzt**, nicht zusätzlich umzusetzen.
 

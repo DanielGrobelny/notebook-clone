@@ -1,0 +1,76 @@
+{
+  "synthetic": true,
+  "databaseAccess": false,
+  "providerCalls": 2,
+  "runs": [
+    {
+      "budget": 800,
+      "finishReason": "length",
+      "usage": {
+        "inputTokens": 357,
+        "inputTokenDetails": {
+          "noCacheTokens": 357,
+          "cacheReadTokens": 0,
+          "cacheWriteTokens": 0
+        },
+        "outputTokens": 800,
+        "outputTokenDetails": {
+          "textTokens": 657,
+          "reasoningTokens": 143
+        },
+        "totalTokens": 1157,
+        "raw": {
+          "input_tokens": 357,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 800,
+          "output_tokens_details": {
+            "reasoning_tokens": 143
+          },
+          "total_tokens": 1157
+        }
+      },
+      "durationMs": 10013,
+      "text": "## Gesamtpassung\n\nAuf Basis der vorliegenden Angaben besteht eine **gute bis sehr gute Gesamtpassung** für die Musskriterien der Stelle: Alex erfüllt oder übertrifft die geforderte Erfahrung mit TypeScript und React, bringt Backend-API- und Datenbankerfahrung mit, verfügt über automatisierte Tests und CI/CD-Erfahrung und erfüllt die Deutschanforderung. [citation:11111111-1111-4111-8111-111111111111] [citation:22222222-2222-4222-8222-222222222222]\n\nDie Passung zu den Wunschkriterien ist dagegen nur teilweise belegbar, weil Kubernetes, Python und Erfahrung im Gesundheitswesen im Lebenslauf nicht nachgewiesen sind. [citation:11111111-1111-4111-8111-111111111111] [citation:22222222-2222-4222-8222-222222222222]\n\nFür einzelne Aufgaben wie Architekturentscheidungen, Beratung des Produktteams, barrierearme Oberflächen und Incident-Bereitschaft enthält der Lebenslauf keine ausdrücklichen Belege. [citation:11111111-1111-1111-8111-111111111111] [citation:22222222-2222-4222-8222-222222222222]\n\n## Musskriterien\n\n| Kriterium | Bewertung | Begründung |\n|---|---|---|\n| Mindestens vier Jahre TypeScript/React | **Erfüllt** | Der Lebenslauf nennt fünf Jahre Erfahrung mit TypeScript und React; damit wird die geforderte Dauer von vier Jahren überschritten. [citation:11111111-1111-4111-8111-111111111111] [citation:22222222-2222-4222-8222-222222222222] |\n| Backend-APIs | **Erfüllt** | Alex verfügt über drei Jahre Erfahrung mit REST-APIs. [citation:11111111-1111-4111-8111-111111111111] |\n| Relationale Datenbanken | **Erfüllt** | Der Lebenslauf nennt drei Jahre PostgreSQL-Erfahrung; PostgreSQL ist eine relationale Datenbank. [citation:11111111-1111-4111-8111-111111111111] |\n| Automatisierte Tests | **Erfüllt** | Unit- und Integrationstests mit Vitest und Playwright sind ausdrücklich belegt. [citation:11111111-1111-4111-8111-111111111111] |\n| CI/CD | **Erfüllt** | CI/CD mit GitHub Actions, Docker und AWS ECS wird im Lebenslauf genannt. [citation:11111111-1111-4111-8111-111111111111] |\n| Deutsch mindestens B2 | **Übertroffen** | Alex weist Deutschkenntnisse auf C1-Niveau aus, während die Stelle Deutsch B2 verlangt. [citation:11111111-1111-4111-8111-111111111111] [citation:22222222-2222-4222-8222-222222222"
+    },
+    {
+      "budget": 4096,
+      "finishReason": "stop",
+      "usage": {
+        "inputTokens": 514,
+        "inputTokenDetails": {
+          "noCacheTokens": 514,
+          "cacheReadTokens": 0,
+          "cacheWriteTokens": 0
+        },
+        "outputTokens": 1270,
+        "outputTokenDetails": {
+          "textTokens": 1045,
+          "reasoningTokens": 225
+        },
+        "totalTokens": 1784,
+        "raw": {
+          "input_tokens": 514,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 1270,
+          "output_tokens_details": {
+            "reasoning_tokens": 225
+          },
+          "total_tokens": 1784
+        }
+      },
+      "durationMs": 13630,
+      "text": "## Gesamturteil\n\nAlex Beispiel zeigt eine **gute bis sehr gute Passung zu den Muss-Kriterien** der Senior-Fullstack-Stelle: Die geforderten Kerntechnologien, Backend-Erfahrung, Datenbanken, Tests, CI/CD und Deutschkenntnisse sind im Lebenslauf belegt. [citation:11111111-1111-4111-8111-111111111111] Die wichtigsten Unsicherheiten betreffen Architektur- und Beratungsaufgaben, Barrierefreiheit, Incident-Bereitschaft sowie mehrere Wunschkriterien. [citation:22222222-2222-4222-8222-222222222222]\n\n## Muss-Kriterien\n\n- **TypeScript/React:** Gefordert sind mindestens vier Jahre; im CV sind fünf Jahre TypeScript und React angegeben. Das Kriterium ist damit belegt erfüllt. [citation:11111111-1111-4111-8111-111111111111] [citation:22222222-2222-4222-8222-222222222222]\n- **Backend-APIs und relationale Datenbanken:** Alex verfügt über drei Jahre Erfahrung mit REST-APIs und PostgreSQL. Das deckt die geforderten API- und relationalen-Datenbankkenntnisse ab, auch wenn der genaue Umfang der Backend-Verantwortung offenbleibt. [citation:11111111-1111-4111-8111-111111111111] [citation:22222222-2222-4222-8222-222222222222]\n- **Automatisierte Tests:** Unit- und Integrationstests mit Vitest und Playwright sind ausdrücklich genannt. Das Kriterium ist belegt erfüllt. [citation:11111111-1111-4111-8111-111111111111] [citation:22222222-2222-4222-8222-222222222222]\n- **CI/CD:** GitHub Actions, Docker und AWS ECS belegen praktische CI/CD-Erfahrung. [citation:11111111-1111-4111-8111-111111111111]\n- **Deutsch:** Deutsch auf C1-Niveau übertrifft die geforderten B2-Kenntnisse. [citation:11111111-1111-4111-8111-111111111111] [citation:22222222-2222-4222-8222-222222222222]\n\n## Wunschkriterien und konkrete Stärken\n\nKubernetes, Python und Erfahrung im Gesundheitswesen sind im CV nicht nachgewiesen. Das sind zunächst **fehlende Nachweise, keine belegten tatsächlichen Defizite**, weil aus den Passagen nicht hervorgeht, dass Alex diese Kenntnisse nicht besitzt. [citation:11111111-1111-4111-8111-111111111111] Die gewünschte Mentoring-Erfahrung ist ebenfalls nicht ausdrücklich genannt. Allerdings sprechen zwei Jahre Teamleitung für vier Entwickler für mögliche Führungs- und Unterstützungsfähigkeiten; Mentoring sollte dennoch konkret verifiziert werden. [citation:11111111-1111-4111-8111-111111111111]\n\nAls konkrete Stärke ist außerdem die messbare Optimierung einer Bestellplattform hervorzuheben: Die Ladezeit wurde von drei auf 1,5 Sekunden reduziert. [citation:11111111-1111-4111-8111-111111111111]\n\n## Offene Punkte für das Interview\n\nZu klären sind insbesondere:\n\n1. Hat Alex Architekturentscheidungen dokumentiert und Produktteams technisch beraten? [citation:22222222-2222-4222-8222-222222222222]\n2. Welche Erfahrungen bestehen mit barrierearmen Oberflächen? [citation:22222222-2222-4222-8222-222222222222]\n3. Gab es Incident-Bereitschaft, Produktionsstörungen oder On-call-Verantwortung? [citation:22222222-2222-4222-8222-222222222222]\n4. Wie tief reichen die Backendkenntnisse über REST und PostgreSQL hinaus? [citation:11111111-1111-4111-8111-111111111111]\n5. Bestehen doch Kenntnisse in Kubernetes, Python oder im Gesundheitswesen? [citation:11111111-1111-4111-8111-111111111111]\n6. Sind Remote-Arbeit in Deutschland und gelegentliche Reisen möglich? Dazu enthält der CV keinen Nachweis. [citation:22222222-2222-4222-8222-222222222222]\n\n## Fazit\n\nAlex erfüllt die technischen und sprachlichen Muss-Kriterien überzeugend und bringt zusätzlich relevante Teamleitungs- sowie Performance-Erfahrung mit. [citation:11111111-1111-4111-8111-111111111111] Eine endgültige Senioritätsbewertung hängt vor allem von den unbelegten Architektur-, Beratungs-, Accessibility- und Incident-Erfahrungen ab. Die Bewerbung sollte daher grundsätzlich weiterverfolgt werden, mit einem gezielten Interview zu diesen Lücken."
+    }
+  ],
+  "model": "gpt-5.6-luna",
+  "endpoint": "https://api.openai.com/v1/responses",
+  "configurationSource": "explicit local provider key; not a verified production-key match",
+  "comparison": "old prompt/800 vs current prompt/4096; not budget-only",
+  "manualReview": "4096 response covers requested criteria, strengths, missing evidence and interview questions, ends with conclusion; not a comprehensive citation-quality proof"
+}
