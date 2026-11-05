@@ -14,7 +14,7 @@ async function streamResponse(res: import('node:http').ServerResponse, text: str
   sendEvent(res, 'response.created', { type: 'response.created', response: { id: 'resp_local', object: 'response', created_at: 0, status: 'in_progress', model: 'test-local', output: [] } });
   sendEvent(res, 'response.output_item.added', { type: 'response.output_item.added', output_index: 0, item });
   sendEvent(res, 'response.content_part.added', { type: 'response.content_part.added', item_id: item.id, output_index: 0, content_index: 0, part });
-  for(const delta of mode==='slow'?text.match(/[sS]{1,240}/g)??[]:[text]){sendEvent(res, 'response.output_text.delta', { type: 'response.output_text.delta', item_id: item.id, output_index: 0, content_index: 0, delta, logprobs: [] });if(mode==='slow')await new Promise(resolve=>setTimeout(resolve,60));}
+  for(const delta of mode==='slow'?text.match(/[\s\S]{1,240}/g)??[]:[text]){sendEvent(res, 'response.output_text.delta', { type: 'response.output_text.delta', item_id: item.id, output_index: 0, content_index: 0, delta, logprobs: [] });if(mode==='slow')await new Promise(resolve=>setTimeout(resolve,60));}
   if(mode==='error'){sendEvent(res,'error',{type:'error',code:'server_error',message:'local synthetic stream error',param:null});res.end();return;}
   if(mode==='abort'){const timer=setTimeout(()=>res.end(),35000);res.on('close',()=>clearTimeout(timer));return;}
   sendEvent(res, 'response.output_text.done', { type: 'response.output_text.done', item_id: item.id, output_index: 0, content_index: 0, text, logprobs: [] });
