@@ -38,6 +38,18 @@ describe.skipIf(!enabled)('real visitor RLS and private storage',()=>{
   const own=await a.storage.from('source-files').download(path);expect(own.error).toBeNull();expect(await own.data.text()).toBe('private fixture');
   expect((await publicDb.storage.from('source-files').download(path)).error).not.toBeNull();
  });
+ it('exact retrieval covers both visitor sources and rejects forged identities',async()=>{
+  await a.from('sources').update({status:'ready'}).eq('id',s);
+  const second=await a.from('sources').insert({notebook_id:n,title:'second fixture',source_type:'text',status:'ready'}).select('id').single();expect(second.error).toBeNull();
+  const vector=Array.from({length:1536},(_,i)=>i===0?1:0);
+  const rows=Array.from({length:15},(_,i)=>({source_id:s,position:i,content:'synthetic CV '+i,embedding:vector}));rows.push({source_id:second.data.id,position:0,content:'synthetic job',embedding:vector});
+  expect((await a.from('source_chunks').insert(rows)).error).toBeNull();
+  const args={p_notebook_id:n,p_user_id:aid,p_source_ids:[s,second.data.id],p_query_embedding:JSON.stringify(vector),p_match_count:12};
+  const found=await a.rpc('match_source_chunks',args);expect(found.error).toBeNull();expect(found.data).toHaveLength(12);expect(new Set(found.data.map((r:any)=>r.source_id)).size).toBe(2);
+  for(const db of [b,publicDb])expect((await db.rpc('match_source_chunks',args)).data).toEqual([]);
+  expect((await a.rpc('match_source_chunks',{...args,p_user_id:bid})).data).toEqual([]);
+  expect((await a.rpc('match_source_chunks',{...args,p_source_ids:[second.data.id]})).data).toHaveLength(1);
+ });
  it('bootstrap is idempotent under concurrent requests',async()=>{
   const rows=await Promise.all([b.rpc('ensure_visitor_notebook'),b.rpc('ensure_visitor_notebook')]);expect(rows[0].error).toBeNull();expect(rows[0].data).toBe(rows[1].data);
  });
