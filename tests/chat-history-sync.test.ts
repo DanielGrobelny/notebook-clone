@@ -13,3 +13,7 @@ describe('Chat-Verlauf-Synchronisierung', () => {
     expect(isAssistantPersisted([{ id: 'assistant-a', role: 'assistant', content: streamed }], undefined, streamed)).toBe(false);
   });
 });
+
+it('bestätigt denselben Teiltext mit persistiertem Unvollständigkeitshinweis',()=>{
+ expect(isAssistantPersisted([{id:'a',role:'assistant',content:'Teil\n\nAntwort unvollständig: Ausgabelimit erreicht.'}],'a','Teil')).toBe(true);
+});

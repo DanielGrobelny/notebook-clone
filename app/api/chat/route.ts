@@ -1,6 +1,7 @@
+import { completedContent, completionNotice } from '../../../lib/answer-completion';
 import { NextResponse } from 'next/server';
 import { createOpenAI } from '@ai-sdk/openai';
-import { streamText } from 'ai';
+import { streamText, consumeStream } from 'ai';
 import { getModelConfiguration } from '../../ai-config';
 import { chatRequestSchema } from '../../chat-contract';
 import { chatLimits } from '../../chat-limits';
@@ -39,6 +40,43 @@ export async function POST(request: Request) {
   if (chatError || !chat) return NextResponse.json({ code: 'persistence_failed', message: 'Chat konnte nicht gespeichert werden.' }, { status: 500 });
   const { error: userMessageError } = await db.from('messages').insert({ chat_id: chat.id, role: 'user', content: question });
   if (userMessageError) return NextResponse.json({ code: 'persistence_failed', message: 'Nachricht konnte nicht gespeichert werden.' }, { status: 500 });
-  const proposedAssistantMessageId = crypto.randomUUID(); const { data: assistantMessage, error: assistantMessageError } = await db.from('messages').insert({ id: proposedAssistantMessageId, chat_id: chat.id, role: 'assistant', content: 'Wird generiert …', citations: [] }).select('id').single(); if (assistantMessageError || !assistantMessage) return NextResponse.json({ code: 'persistence_failed', message: 'Antwort konnte nicht sicher vorbereitet werden.' }, { status: 500 }); const assistantMessageId = assistantMessage.id; try { const openai = createOpenAI({ apiKey: config.apiKey, ...(config.baseURL ? { baseURL: config.baseURL } : {}) }); const result = streamText({ model: openai.responses(config.modelId), system: groundedAnswerInstruction, prompt: 'Bisheriger Verlauf (nur Gesprächskontext, keine aktuelle Evidenz):\n' + formatBoundedHistory(history) + '\n\nAktuelle Evidenz:\n' + grounded.context + '\n\nFrage: ' + question, maxOutputTokens: chatLimits.maxOutputTokens, maxRetries: 0, abortSignal, providerOptions: { openai: { store: false } }, onFinish: async ({ text, totalUsage }) => { const ids = validateCitationIds(citationIds(text), grounded.passages); const { error } = await db.from('messages').update({ content: text, citations: ids.map(id => { const p = grounded.passages.find(x => x.id === id)!; return { id, sourceId: p.source_id, page: p.page, section: p.section, excerpt: p.content }; }) }).eq('id', assistantMessageId); if (error) console.error(JSON.stringify({ event: 'assistant_message_persistence_failed' })); console.info(JSON.stringify({ event: 'openai_usage', model: config.modelId, usage: totalUsage })); } }); return result.toUIMessageStreamResponse({ onError: error => safeStreamError(error, abortSignal, timeout), messageMetadata: ({ part }) => part.type === 'finish' ? { usage: part.totalUsage, citations: [], assistantMessageId } : undefined }); }
-  catch (error) { await db.from('messages').delete().eq('id', assistantMessageId); const message = safeStreamError(error, abortSignal, timeout); return NextResponse.json({ code: isRateLimited(error) ? 'rate_limited' : 'provider_error', message }, { status: isRateLimited(error) ? 429 : 502 }); }
+  const proposedAssistantMessageId = crypto.randomUUID(); const { data: assistantMessage, error: assistantMessageError } = await db.from('messages').insert({ id: proposedAssistantMessageId, chat_id: chat.id, role: 'assistant', content: completionNotice('interrupted'), citations: [] }).select('id').single(); if (assistantMessageError || !assistantMessage) return NextResponse.json({ code: 'persistence_failed', message: 'Antwort konnte nicht sicher vorbereitet werden.' }, { status: 500 });
+  const assistantMessageId = assistantMessage.id;
+  let partial = ''; let failure: string | undefined; let persisted = false;
+  const persist = async (text: string, reason: string) => {
+    const ids = validateCitationIds(citationIds(text), grounded.passages);
+    const { error } = await db.from('messages').update({ content: completedContent(text, reason), citations: ids.map(id => {
+      const p = grounded.passages.find(x => x.id === id)!;
+      return { id, sourceId: p.source_id, page: p.page, section: p.section, excerpt: p.content };
+    }) }).eq('id', assistantMessageId);
+    persisted = !error;
+    if (error) console.error(JSON.stringify({ event: 'assistant_message_persistence_failed' }));
+  };
+  try {
+    const openai = createOpenAI({ apiKey: config.apiKey, ...(config.baseURL ? { baseURL: config.baseURL } : {}) });
+    const result = streamText({
+      model: openai.responses(config.modelId), system: groundedAnswerInstruction,
+      prompt: 'Bisheriger Verlauf (nur Gesprächskontext, keine aktuelle Evidenz):\n' + formatBoundedHistory(history) + '\n\nAktuelle Evidenz:\n' + grounded.context + '\n\nFrage: ' + question,
+      maxOutputTokens: chatLimits.maxOutputTokens, maxRetries: 0, abortSignal, providerOptions: { openai: { store: false } },
+      onChunk: ({ chunk }) => { if (chunk.type === 'text-delta') partial += chunk.text; },
+      onAbort: async () => { failure = timeout.aborted ? 'timeout' : 'abort'; await persist(partial, failure); },
+      onError: async () => { failure = 'error'; await persist(partial, failure); },
+      onFinish: async ({ text, totalUsage, finishReason }) => {
+        const reason = failure ?? finishReason;
+        await persist(text, reason);
+        console.info(JSON.stringify({ event: 'openai_usage', model: config.modelId, usage: totalUsage, finishReason: reason }));
+      }
+    });
+    return result.toUIMessageStreamResponse({
+      consumeSseStream: ({ stream }) => consumeStream({ stream }),
+      onError: error => safeStreamError(error, abortSignal, timeout),
+      messageMetadata: ({ part }) => part.type === 'start' ? { assistantMessageId } : part.type === 'finish' ? {
+        assistantMessageId, finishReason: failure ?? part.finishReason, persisted,
+        notice: (failure ?? part.finishReason) === 'stop' ? undefined : completionNotice(failure ?? part.finishReason)
+      } : undefined
+    });
+  } catch (error) {
+    await persist(partial, abortSignal.aborted ? timeout.aborted ? 'timeout' : 'abort' : 'error');
+    return NextResponse.json({ code: isRateLimited(error) ? 'rate_limited' : 'provider_error', message: safeStreamError(error, abortSignal, timeout) }, { status: isRateLimited(error) ? 429 : 502 });
+  }
 }
