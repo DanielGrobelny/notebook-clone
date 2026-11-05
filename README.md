@@ -79,3 +79,9 @@ Ursache der früheren 401: Die Vercel-Env-Exporte enthalten nur [SENSITIVE]-Plat
 ### Folgefragen und SDK-Vertrag
 
 Der Browser sendet nur die aktuelle Nutzerfrage (höchstens 4000 Zeichen), nicht den UI-Verlauf mit Assistant-Metadaten, Reasoning-/Step-Parts oder langen Antworten. Bereits geöffnete ältere Clients dürfen weiterhin begrenzte User-/Assistant-Verläufe senden; der Server verwirft deren Historie und validiert ausschließlich die abschließende Text-Nutzerfrage. System-/Toolrollen, ungültige Parts, leere oder zu lange Fragen werden abgewiesen. Modellkontext kommt unverändert ausschließlich aus dem besitzgeprüften gespeicherten Verlauf und der aktuellen Quellenauswahl. Mehrturn-Regressionen prüfen zweite/dritte Fragen nach Antworten über 4000 Zeichen und eine weitere Frage nach Reload; beim Reload müssen Quellen erneut ausgewählt werden.
+
+### Viewport-Arbeitsbereich
+
+Der Chat nutzt die verbleibende dynamische Viewporthöhe unter der globalen Navigation. Verlauf und Desktop-Seitenleisten scrollen unabhängig; die mehrzeilige Eingabe samt Quellenstatus bleibt als eigene Layoutzeile sichtbar (kein Overlay). Enter sendet, Shift+Enter erzeugt eine neue Zeile. Lange Eingaben scrollen intern. Auf kleinen Displays bleiben Quellen und Ergebnisse über die vorhandenen Drawer erreichbar. Die Viewport-Metadaten bitten unterstützende Browser beim Öffnen der Bildschirmtastatur um eine Inhaltsgrößenänderung; Zoom wird nicht eingeschränkt.
+
+Geladene Verläufe starten am Ende ohne Fokuswechsel. Weitere Streamteile folgen nur, solange der Verlauf höchstens 80 Pixel vom Ende entfernt ist; ansonsten bleibt die Leseposition erhalten und „Neueste Nachricht“ führt zurück. Ein geöffnetes Belegfenster pausiert das automatische Folgen. Browserregressionen prüfen leere/lange Verläufe, Reload, schmale und niedrige Viewports, mehrzeilige Eingabe und verzögertes Streaming. Mobile-Automation ist Chromium-Emulation, keine Zusicherung für reale iOS-Tastaturen.
