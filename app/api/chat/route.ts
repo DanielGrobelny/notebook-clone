@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { createOpenAI } from '@ai-sdk/openai';
 import { streamText, consumeStream } from 'ai';
 import { getModelConfiguration } from '../../ai-config';
-import { chatRequestSchema } from '../../chat-contract';
+import { chatRequestSchema, currentUserMessages } from '../../chat-contract';
 import { chatLimits } from '../../chat-limits';
 import { createClient } from '../../../lib/supabase/server';
 import { claimVisitorProviderCall } from '../../../lib/visitor-rate-guard';
@@ -22,7 +22,7 @@ async function savedHistory(db: any, notebookId: string): Promise<ChatHistoryMes
 export async function POST(request: Request) {
   let body: unknown; try { body = await request.json(); } catch { return NextResponse.json({ code: 'invalid_request', message: 'Die Chat-Anfrage ist kein gültiges JSON.' }, { status: 400 }); }
   const input = body && typeof body === 'object' ? body as Record<string, unknown> : body;
-  const parsed = chatRequestSchema.safeParse(input && typeof input === 'object' ? { notebookId: (input as Record<string, unknown>).notebookId, sourceIds: (input as Record<string, unknown>).sourceIds, messages: (input as Record<string, unknown>).messages } : input);
+  const parsed = chatRequestSchema.safeParse(input && typeof input === 'object' ? { notebookId: (input as Record<string, unknown>).notebookId, sourceIds: (input as Record<string, unknown>).sourceIds, messages: currentUserMessages((input as Record<string, unknown>).messages) } : input);
   if (!parsed.success) return NextResponse.json({ code: 'invalid_request', message: 'Die Chat-Anfrage enthält keine zulässigen Nutzernachrichten oder Quellen.' }, { status: 400 });
   const timeout = AbortSignal.timeout(chatLimits.timeoutMs); const abortSignal = AbortSignal.any([request.signal, timeout]);
   if (abortSignal.aborted) return NextResponse.json({ code: 'aborted', message: 'Die Anfrage wurde abgebrochen.' }, { status: 499 });
