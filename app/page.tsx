@@ -121,16 +121,17 @@ export default function Home() {
       el.style.height = Math.min(el.scrollHeight, 120) + 'px';
     }
   }, [q]);
+  const notebookId = activeNotebook?.id;
   const [sourceCount, setSourceCount] = useState(0);
   const [readyIds, setReadyIds] = useState<string[]>([]);
   useEffect(() => {
     let alive = true;
-    if (!activeNotebook) {
+    if (!notebookId) {
       setSourceCount(0);
       setReadyIds([]);
       return;
     }
-    fetch('/api/notebooks/' + activeNotebook.id + '/sources')
+    fetch('/api/notebooks/' + notebookId + '/sources')
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => {
         if (!alive) return;
@@ -147,18 +148,20 @@ export default function Home() {
     return () => {
       alive = false;
     };
-  }, [activeNotebook?.id, selected]);
+  }, [notebookId, selected]);
   useEffect(() => {
     let alive = true;
-    if (!activeNotebook) {
+    if (!notebookId) {
       setHistory([]);
       return;
     }
-    fetch('/api/notebooks/' + activeNotebook.id + '/history')
+    fetch('/api/notebooks/' + notebookId + '/history')
       .then(async (r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!alive || !data) return;
-        const loaded = (data.chats ?? []).flatMap((chat: any) => chat.messages ?? []);
+        const loaded = (data.chats ?? []).flatMap(
+          (chat: { messages?: HistoryMessage[] }) => chat.messages ?? [],
+        );
         initialScroll.current = true;
         followLatest.current = true;
         setHistory(loaded);
@@ -174,10 +177,10 @@ export default function Home() {
     return () => {
       alive = false;
     };
-  }, [activeNotebook?.id, setMessages]);
+  }, [notebookId, setMessages]);
   useEffect(() => {
-    if (status !== 'ready' || !activeNotebook) return;
-    const latest = [...messages].reverse().find((message: any) => message.role === 'assistant');
+    if (status !== 'ready' || !notebookId) return;
+    const latest = [...messages].reverse().find((message) => message.role === 'assistant');
     const text = latest ? messageText(latest.parts) : '';
     if (!latest || !text) return;
     const messageId = latest.id;
@@ -195,7 +198,7 @@ export default function Home() {
       let gotHistory = false;
       for (let attempt = 0; attempt < 5; attempt++) {
         try {
-          const response = await fetch('/api/notebooks/' + activeNotebook.id + '/history', {
+          const response = await fetch('/api/notebooks/' + notebookId + '/history', {
             signal: controller.signal,
           });
           const data = response.ok ? await response.json() : null;
@@ -203,7 +206,7 @@ export default function Home() {
           if (data) {
             gotHistory = true;
             const loaded = (data.chats ?? []).flatMap(
-              (chat: any) => chat.messages ?? [],
+              (chat: { messages?: HistoryMessage[] }) => chat.messages ?? [],
             ) as HistoryMessage[];
             if (isAssistantPersisted(loaded, assistantMessageId, text)) {
               setHistory(loaded);
@@ -236,13 +239,15 @@ export default function Home() {
       active = false;
       controller.abort();
     };
-  }, [status, activeNotebook?.id, messages]);
+  }, [status, notebookId, messages]);
   const openCitation = async (c: Citation) => {
     if (!activeNotebook || !c.sourceId || !c.id) return;
     const r = await fetch('/api/notebooks/' + activeNotebook.id + '/sources/' + c.sourceId);
     if (!r.ok) return;
     const data = await r.json();
-    const found = (data.chunks ?? []).find((chunk: any) => chunk.id === c.id);
+    const found = (data.chunks ?? []).find(
+      (chunk: { id: string; content: string }) => chunk.id === c.id,
+    );
     setCitation(c);
     setCitationText(found?.content ?? c.excerpt);
   };

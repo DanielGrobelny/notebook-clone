@@ -3,7 +3,11 @@ export async function visitorContext() {
   const db = await createClient();
   return { db, visitorId: db.visitor.id };
 }
-export async function ownedNotebook(db: any, id: string, visitorId: string) {
+export async function ownedNotebook(
+  db: Pick<Awaited<ReturnType<typeof createClient>>, 'from'>,
+  id: string,
+  visitorId: string,
+) {
   const { data, error } = await db
     .from('notebooks')
     .select('id,title,created_at,updated_at')
