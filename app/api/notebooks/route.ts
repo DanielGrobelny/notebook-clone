@@ -1,4 +1,36 @@
-import { NextResponse } from 'next/server'; import { z } from 'zod'; import { visitorContext } from '../../../lib/visitor-owner';
-const title=z.string().trim().min(1).max(160);
-export async function GET(){try{const {db,visitorId}=await visitorContext();const {data,error}=await db.from('notebooks').select('id,title,created_at,updated_at').eq('visitor_id',visitorId).order('updated_at',{ascending:false});return error?NextResponse.json({error:'query_failed'},{status:500}):NextResponse.json({notebooks:data});}catch{return NextResponse.json({error:'session_unavailable'},{status:503});}}
-export async function POST(request:Request){const parsed=title.safeParse((await request.json().catch(()=>null))?.title);if(!parsed.success)return NextResponse.json({error:'invalid_title'},{status:400});try{const {db,visitorId}=await visitorContext();const {data,error}=await db.from('notebooks').insert({title:parsed.data,visitor_id:visitorId}).select('id,title,created_at,updated_at').single();return error?NextResponse.json({error:'create_failed'},{status:500}):NextResponse.json({notebook:data},{status:201});}catch{return NextResponse.json({error:'session_unavailable'},{status:503});}}
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { visitorContext } from '../../../lib/visitor-owner';
+const title = z.string().trim().min(1).max(160);
+export async function GET() {
+  try {
+    const { db, visitorId } = await visitorContext();
+    const { data, error } = await db
+      .from('notebooks')
+      .select('id,title,created_at,updated_at')
+      .eq('visitor_id', visitorId)
+      .order('updated_at', { ascending: false });
+    return error
+      ? NextResponse.json({ error: 'query_failed' }, { status: 500 })
+      : NextResponse.json({ notebooks: data });
+  } catch {
+    return NextResponse.json({ error: 'session_unavailable' }, { status: 503 });
+  }
+}
+export async function POST(request: Request) {
+  const parsed = title.safeParse((await request.json().catch(() => null))?.title);
+  if (!parsed.success) return NextResponse.json({ error: 'invalid_title' }, { status: 400 });
+  try {
+    const { db, visitorId } = await visitorContext();
+    const { data, error } = await db
+      .from('notebooks')
+      .insert({ title: parsed.data, visitor_id: visitorId })
+      .select('id,title,created_at,updated_at')
+      .single();
+    return error
+      ? NextResponse.json({ error: 'create_failed' }, { status: 500 })
+      : NextResponse.json({ notebook: data }, { status: 201 });
+  } catch {
+    return NextResponse.json({ error: 'session_unavailable' }, { status: 503 });
+  }
+}
