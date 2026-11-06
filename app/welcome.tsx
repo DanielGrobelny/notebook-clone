@@ -1,28 +1,34 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 const KEY = 'lumen.welcome.v1';
 let dismissed = false;
+const CHANGE = 'lumen-welcome-change';
+function subscribe(listener: () => void) {
+  window.addEventListener('storage', listener);
+  window.addEventListener(CHANGE, listener);
+  return () => {
+    window.removeEventListener('storage', listener);
+    window.removeEventListener(CHANGE, listener);
+  };
+}
+function isDismissed() {
+  try {
+    return dismissed || localStorage.getItem(KEY) === 'seen';
+  } catch {
+    return dismissed;
+  }
+}
+const serverDismissed = () => true;
 export function Welcome({ ready, onUpload }: { ready: boolean; onUpload: () => void }) {
-  const [open, setOpen] = useState(false);
+  const open = !useSyncExternalStore(subscribe, isDismissed, serverDismissed);
   const dialog = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    let seen = dismissed;
-    try {
-      seen = seen || localStorage.getItem(KEY) === 'seen';
-    } catch {}
-    if (!seen) setOpen(true);
-    const sync = (e: StorageEvent) => {
-      if (e.key === KEY && e.newValue === 'seen') setOpen(false);
-    };
-    window.addEventListener('storage', sync);
-    return () => window.removeEventListener('storage', sync);
-  }, []);
   useEffect(() => {
     if (!open || !ready) return;
     const previous = document.activeElement as HTMLElement | null;
-    dialog.current?.showModal();
+    const element = dialog.current;
+    element?.showModal();
     return () => {
-      dialog.current?.close();
+      element?.close();
       previous?.focus();
     };
   }, [open, ready]);
@@ -31,7 +37,7 @@ export function Welcome({ ready, onUpload }: { ready: boolean; onUpload: () => v
     try {
       localStorage.setItem(KEY, 'seen');
     } catch {}
-    setOpen(false);
+    window.dispatchEvent(new Event(CHANGE));
     if (upload) onUpload();
   };
   if (!open || !ready) return null;
