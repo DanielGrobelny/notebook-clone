@@ -4,146 +4,146 @@
     "title": "Scope und Priorisierung",
     "status": "belegt",
     "gap": "Accounts/Seeds ersetzt. Audio/OCR/URL/Websuche nicht Production; Notizen/Briefings vorhanden.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/PROJECT.md#L1-L23"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/PROJECT.md#L1-L23"
   },
   {
     "id": "A02",
     "title": "Notebook und Persistenz",
     "status": "belegt",
     "gap": "Cookieverlust ohne Recovery. Aktueller Navigation-Smoke und Persistenztests belegt.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/tests/e2e/notebook-switcher.spec.ts#L1-L15"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/tests/e2e/notebook-switcher.spec.ts#L1-L66"
   },
   {
     "id": "A03",
     "title": "Import und OCR",
     "status": "belegt",
     "gap": "Keine OCR; Limits/PDF-Worker und Fehlermeldungen vorhanden, keine universelle PDF-Garantie.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/lib/sources/import.ts#L1-L50"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/lib/sources/import.ts#L1-L153"
   },
   {
     "id": "A04",
     "title": "Quellenauswahl",
     "status": "belegt",
     "gap": "Besitz/Ready/SQL-Filter und quellenfaire Rangfolge belegt. Nach Reload neu auswählen.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/tests/e2e/comparison-retrieval.spec.ts#L1-L50"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/tests/e2e/comparison-retrieval.spec.ts#L1-L143"
   },
   {
     "id": "A05",
     "title": "Mehrturn und Streaming",
     "status": "belegt",
     "gap": "Aktueller Userturn/Serverhistory/Cancel/Warnungen. Realer Vierturn-Smoke historisch cc29f2e.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/app/api/chat/route.ts#L1-L50"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/app/api/chat/route.ts#L40-L180"
   },
   {
     "id": "A06",
     "title": "Fehlende Evidenz und Konflikte",
     "status": "teilweise",
     "gap": "Aktuelle manuell grüne Modellmatrix fehlt; mit A19 bündeln.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/evals/quality/README.md#L1-L19"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/evals/quality/README.md#L1-L19"
   },
   {
     "id": "A07",
     "title": "Semantische Zitate",
     "status": "teilweise",
     "gap": "ID-Prüfung und Originalpassage vorhanden; semantische Deckung/Recall offen.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/lib/retrieval.ts#L1-L50"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/lib/retrieval.ts#L16-L103"
   },
   {
     "id": "A08",
     "title": "Erstnutzer-Einstieg",
     "status": "teilweise",
     "gap": "Direkter Besucher/Willkommen/Quellen-zuerst belegt. Drei Usability-Pfade unbelegt.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/tests/e2e/welcome.spec.ts#L1-L50"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/tests/e2e/welcome.spec.ts#L1-L139"
   },
   {
     "id": "A09",
     "title": "Responsive und A11y",
     "status": "teilweise",
     "gap": "Chromium/320px/Fokus/Composer belegt; WebKit/iOS/axe/Kontrast/Screenreader/Slow-Network offen.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/tests/e2e/composer-layout.spec.ts#L1-L34"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/tests/e2e/composer-layout.spec.ts#L1-L120"
   },
   {
     "id": "A10",
     "title": "Besucher-/DB-/Storage-Isolation",
     "status": "belegt",
     "gap": "Negative Reads/Mutationen/Spoofing/Retrieval/Storage belegt. Cookie Bearer-Credential.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/tests/visitor-database.integration.test.ts#L1-L50"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/tests/visitor-database.integration.test.ts#L89-L188"
   },
   {
     "id": "A11",
     "title": "Datenmodell und Migration",
     "status": "teilweise",
     "gap": "Migrationen/Löschtests belegt; ADR-Review/Cleanup offen, Rate-FK ohne Cascade.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/supabase/migrations/20261103120000_notebooks.sql#L1-L50"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/supabase/migrations/20261103120000_notebooks.sql#L1-L50"
   },
   {
     "id": "A12",
     "title": "Retry und Idempotenz",
     "status": "teilweise",
     "gap": "Hash/Unique-Index/Retry vorhanden; Prozessverlust/Cleanupfehler und Exactly-once unbelegt.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/app/api/notebooks/[id]/sources/route.ts#L1-L8"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/app/api/notebooks/[id]/sources/route.ts#L39-L191"
   },
   {
     "id": "A13",
     "title": "Untrusted Content",
     "status": "teilweise",
     "gap": "Prompt trennt Daten/Instruktionen, keine Tools. Adversarial Real-Eval nicht grün.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/lib/grounded-prompt.mjs#L1-L2"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/lib/grounded-prompt.mjs#L1-L3"
   },
   {
     "id": "A14",
     "title": "Limits und Kosten",
     "status": "teilweise",
     "gap": "5 MiB/100 Seiten/500k Zeichen; 12 Claims/h, Chat zwei Claims, 4096 Tokens/30s. Import-Timeout und Spendlimit offen.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/app/chat-limits.ts#L1-L2"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/app/chat-limits.ts#L1-L7"
   },
   {
     "id": "A15",
     "title": "Betrieb und Skalierung",
     "status": "offen",
     "gap": "Usage/Release-Rollback vorhanden; SLO/Alerts/CI/1000-Nutzer-Lasttest fehlen.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/app/api/chat/route.ts#L1-L50"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/app/api/chat/route.ts#L40-L180"
   },
   {
     "id": "A16",
     "title": "Setup und Dokumentation",
     "status": "teilweise",
     "gap": "README/env.example/Teststack vorhanden; unabhängiges Clone-to-run-Protokoll offen.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/README.md#L1-L50"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/README.md#L1-L50"
   },
   {
     "id": "A17",
     "title": "Architektur und RAG",
     "status": "teilweise",
     "gap": "RAG begrenzt Kontext; Recall-Eval/formaler ADR-Review offen.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/lib/retrieval.ts#L1-L50"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/lib/retrieval.ts#L16-L103"
   },
   {
     "id": "A18",
     "title": "Testmatrix und CI",
     "status": "teilweise",
-    "gap": "Identischer Appbaum: 105 Unit/DB, 72 Chromium, 2 Storage, Build/Typen. Zwei PDF-Fixtures übersprungen; kein neuer CI-Lauf.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/scripts/test-visitor-stack.mjs#L1-L50"
+    "gap": "Preview 1124615: 112 Unit/DB, 74 E2E, 2 Storage, 2 PDF-Skips; kein neuer CI-Lauf.",
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/scripts/test-visitor-stack.mjs#L1-L218"
   },
   {
     "id": "A19",
     "title": "Echte KI-Evals",
     "status": "offen",
     "gap": "v1 5/6 fehlgeschlagen; v2 unvollständig/pending review. Aktueller Qualitätsgate fehlt.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/evals/quality/README.md#L1-L19"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/evals/quality/README.md#L1-L19"
   },
   {
     "id": "A20",
     "title": "KI-Workflow und Onboarding",
     "status": "teilweise",
     "gap": "PR24–26 zeigen Korrekturen; keine erfundenen TDD/Junior-Sessions.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/tests/e2e/followup-chat.spec.ts#L1-L24"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/tests/e2e/followup-chat.spec.ts#L1-L54"
   },
   {
     "id": "A21",
     "title": "Loom und Abgabe",
     "status": "teilweise",
     "gap": "Loom-Aufnahme/Link/Reviewerfreigabe offen; Mail nur Entwurf.",
-    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/README.md#L1-L50"
+    "url": "https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/README.md#L1-L50"
   }
 ]

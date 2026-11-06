@@ -1,10 +1,16 @@
 # Recording Guide – Lumen in neun Minuten
 
-[Deck](../../public/presentation/index.html) · [Reviewer](reviewer-guide.md) · [21 Prüfthemen](acceptance-matrix.md) · [Live-App](https://notebook-clone-preview.vercel.app)
+[Deck](../../public/presentation/index.html) · [Reviewer](reviewer-guide.md) · [21 Prüfthemen](acceptance-matrix.md) · [Live-App](https://notebook-clone-preview-pqdwehnkq-daniel-grobelnys-projects.vercel.app)
+
+## Prüfstand und Previewzugang
+
+Preview 1124615: 112 Unit-/DB-Tests, 74 E2E, 2 Storage; 2 optionale PDF-Fixtures übersprungen. 63 verbleibende any-Stellen, 0 bekannte Dependency-Befunde; negativer Client-Build gegen Server-only-Import bestanden. Echter TXT-Upload (4,09 s), Chat, Zitate und History bestanden. Kein Live-PDF-, Last- oder Performancegewinn-Nachweis. Übernommener Refactor-Prüfbericht; dieses Dokumentationspaket startet keine Provider-/DB-Tests.
+
+Demo ist Preview 1124615, nicht Production. Vercel-Login/Projektberechtigung vor der Aufnahme prüfen; der App-Besucherzugang selbst hat kein Konto.
 
 ## Vor der Aufnahme: einmal wirklich durchspielen
 
-UI-/Codebezug: Production 257f24fa5b56fa723b8a2054f9e6dab0bd358f2e (06.11.2026). Die Codebeispiele bleiben auf diesen Stand festgelegt; vor der Aufnahme mit der dann aktuellen App abgleichen. Dieses Paket ändert die App nicht. Umfang aus PROJECT.md: PDF/Text, Quellenwahl, belegter Chat, Persistenz. OCR, Audio, URLimport, Sync und Accounts sind außerhalb des MVP. Fixtures werden manuell importiert, nicht automatisch geseedet.
+UI-/Codebezug: Preview 11246153df8c9740ae79dce28927d5284e2bba4d (06.11.2026). Die Codebeispiele bleiben auf diesen Stand festgelegt; vor der Aufnahme mit der dann aktuellen App abgleichen. Dieses Paket ändert die App nicht. Umfang aus PROJECT.md: PDF/Text, Quellenwahl, belegter Chat, Persistenz. OCR, Audio, URLimport, Sync und Accounts sind außerhalb des MVP. Fixtures werden manuell importiert, nicht automatisch geseedet.
 
 - Browser mindestens 1280×720, 100 % Zoom. Benachrichtigungen aus, keine privaten Tabs oder Dokumente sichtbar. Nur Aufnahmefenster teilen.
 - Tabs: 1 Deck, 2 Live-App, 3 vorbereitetes Notebook, 4 Zitier-ID-Code, 5 RLS-Code, 6 Mehrturn-Test. Code-Links unten vorab öffnen; privaten GitHubzugriff prüfen.
@@ -50,19 +56,19 @@ Sprechvorschlag: „Wir folgen demselben Weg technisch. PDF und Text werden extr
 
 ## 5:15–6:15 · Folie 4 → Tab 4 · Entscheidung 1
 
-Klick: [Zitier-ID-Prüfung](https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/lib/retrieval.ts#L46-L49), Zeilen 46–49. Optional [Scoped Retrieval](https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/supabase/migrations/20261105090000_exact_scoped_retrieval.sql#L9-L26), Zeilen 9–26. Codezoom bei Bedarf erhöhen; nicht durch Imports scrollen.
+Klick: [Zitier-ID-Prüfung](https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/lib/retrieval.ts#L97-L103), Zeilen 97–103. Optional [Scoped Retrieval](https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/supabase/migrations/20261105090000_exact_scoped_retrieval.sql#L9-L26), Zeilen 9–26. Codezoom bei Bedarf erhöhen; nicht durch Imports scrollen.
 
 Sprechvorschlag: „Das erste Problem ist eine plausible, aber unbelegte Antwort. Deshalb begrenze ich die Antwort auf den gewählten Quellenraum und verknüpfe sie mit Originalpassagen. Hier werden nur Beleg-IDs akzeptiert, die tatsächlich aus dem aktuellen Retrieval stammen. In der Suche werden Notebook, Besitzer und ausgewählte bereite Quellen zuerst eingeschränkt. Die Suche wählt passende Abschnitte aus, statt jedes Mal alle Dokumente zu senden. Dabei kann sie Details übersehen. Eine erlaubte ID beweist noch nicht, dass der Satz inhaltlich richtig ist.“
 
 ## 6:15–7:15 · Folie 5 → Tab 5 · Entscheidung 2
 
-Klick: [RLS- und Storage-Policies](https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/supabase/migrations/20261104163000_visitor_rls.sql#L13-L20), Zeilen 13–20. Bei Bedarf [Datenclient](https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/lib/supabase/server.ts#L8-L12), Zeilen 8–12.
+Klick: [RLS- und Storage-Policies](https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/supabase/migrations/20261104163000_visitor_rls.sql#L13-L20), Zeilen 13–20. Bei Bedarf [Datenclient](https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/lib/supabase/server.ts#L4-L15), Zeilen 4–15.
 
 Sprechvorschlag: „Das zweite Problem ist ein einfacher Einstieg ohne gemeinsamen Datenraum. Der Nutzer braucht keinen Account, bekommt aber einen getrennten Arbeitsbereich. Ein zufälliges HttpOnly-Cookie wird serverseitig zugeordnet. Die Datenbank bekommt einen unprivilegierten Client mit Besuchertoken und prüft den Besitz über RLS erneut. Hier sieht man die Notebookregel und darunter die Regel für private Dateien. Die Grenze ist klar: Wenn das Cookie verloren geht, gibt es keine Wiederherstellung und keinen geräteübergreifenden Sync.“
 
 ## 7:15–8:15 · Folie 6 → Tab 6 · KI-Workflow & Prüfung
 
-Klick: [Request-Fix](https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/app/api/chat/route.ts#L23-L36), Zeilen 23–36; [Regressionstest](https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/tests/e2e/followup-chat.spec.ts#L8-L22), Zeilen 8–22. Historie: [PR 24](https://github.com/DanielGrobelny/notebook-clone/pull/24), [PR 25](https://github.com/DanielGrobelny/notebook-clone/pull/25), [PR 26](https://github.com/DanielGrobelny/notebook-clone/pull/26).
+Klick: [Request-Fix](https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/app/api/chat/route.ts#L55-L82), Zeilen 55–82; [Regressionstest](https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/tests/e2e/followup-chat.spec.ts#L13-L49), Zeilen 13–49. Historie: [PR 24](https://github.com/DanielGrobelny/notebook-clone/pull/24), [PR 25](https://github.com/DanielGrobelny/notebook-clone/pull/25), [PR 26](https://github.com/DanielGrobelny/notebook-clone/pull/26).
 
 Sprechvorschlag: „An einem konkreten Fehler lässt sich der Qualitätsanspruch zeigen. Bei einer Rückfrage enthielt die SDK-History Assistant-Metadaten; die strikte Anfrageprüfung antwortete mit 400. Die Korrektur verarbeitet nur die neue Nutzerfrage und lädt den zugehörigen Verlauf vom Server. Dieser Test sendet mehrere Fragen, lädt die Seite neu und prüft das Anfrageformat. KI-Unterstützung kann Code und Tests vorschlagen; Review muss den tatsächlichen Vertrag und die Fehlerfälle prüfen. Die PRs zeigen solche Korrekturschleifen, nicht eine perfekte Erstimplementierung. Der Test verwendet einen Mock: Er belegt Technik, nicht Modellqualität. Eine systematische Prüfung der aktuellen Antworten und Belege steht noch aus.“
 
