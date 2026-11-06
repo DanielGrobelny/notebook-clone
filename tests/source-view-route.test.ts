@@ -9,19 +9,17 @@ function client() {
   const chunkQuery = {
     select: vi.fn(() => chunkQuery),
     eq: vi.fn(() => chunkQuery),
-    order: vi
-      .fn()
-      .mockResolvedValue({
-        data: [
-          {
-            id: chunkId,
-            position: 2,
-            content: 'Exakte PDF-Seite-2-Passage',
-            metadata: { page: 2 },
-          },
-        ],
-        error: null,
-      }),
+    order: vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: chunkId,
+          position: 2,
+          content: 'Exakte PDF-Seite-2-Passage',
+          metadata: { page: 2 },
+        },
+      ],
+      error: null,
+    }),
   };
   const sourceQuery = {
     select: vi.fn(() => sourceQuery),

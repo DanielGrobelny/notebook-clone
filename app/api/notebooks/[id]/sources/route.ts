@@ -159,17 +159,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       config.baseURL,
     );
     if (!chunks.length) throw new Error('Die Quelle enthält keinen importierbaren Text.');
-    const { error: chunkError } = await db
-      .from('source_chunks')
-      .insert(
-        chunks.map((c, index) => ({
-          source_id: source.id,
-          position: c.position,
-          content: c.content,
-          embedding: vectorLiteral(embeddings[index]),
-          metadata: { page: c.page, section: c.section },
-        })),
-      );
+    const { error: chunkError } = await db.from('source_chunks').insert(
+      chunks.map((c, index) => ({
+        source_id: source.id,
+        position: c.position,
+        content: c.content,
+        embedding: vectorLiteral(embeddings[index]),
+        metadata: { page: c.page, section: c.section },
+      })),
+    );
     if (chunkError) throw chunkError;
     const { data: ready, error: readyError } = await db
       .from('sources')

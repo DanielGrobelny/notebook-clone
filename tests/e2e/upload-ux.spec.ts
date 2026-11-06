@@ -26,13 +26,11 @@ test('Upload: ehrlicher Status, Sperre, Fehler, Retry, Dedup und Auswahl', async
     }
     return route.continue();
   });
-  await scope
-    .locator('input[type=file]')
-    .setInputFiles({
-      name: 'status.txt',
-      mimeType: 'text/plain',
-      buffer: Buffer.from('Eine eigene Quelle für den Status-Test.'),
-    });
+  await scope.locator('input[type=file]').setInputFiles({
+    name: 'status.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('Eine eigene Quelle für den Status-Test.'),
+  });
   await expect(scope.getByRole('status')).toContainText(
     'status.txt · Wird hochgeladen und verarbeitet',
   );
@@ -49,13 +47,11 @@ test('Upload: ehrlicher Status, Sperre, Fehler, Retry, Dedup und Auswahl', async
   await expect(scope.getByRole('status')).toContainText('Bereit und ausgewählt');
   const source = scope.getByRole('button', { name: 'status.txt Bereit · Text', exact: true });
   await expect(source).toHaveAttribute('aria-pressed', 'true');
-  await scope
-    .locator('input[type=file]')
-    .setInputFiles({
-      name: 'status.txt',
-      mimeType: 'text/plain',
-      buffer: Buffer.from('Eine eigene Quelle für den Status-Test.'),
-    });
+  await scope.locator('input[type=file]').setInputFiles({
+    name: 'status.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('Eine eigene Quelle für den Status-Test.'),
+  });
   await expect(scope.getByRole('status')).toContainText('Bereits vorhanden');
   await expect(source).toHaveCount(1);
   await expect(page.getByLabel('Frage an deine Quellen')).toBeEnabled();

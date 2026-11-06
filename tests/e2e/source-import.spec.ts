@@ -11,13 +11,11 @@ test('TXT-Import, Reload und Löschen funktionieren', async ({ page, isMobile })
     ? (await page.getByRole('button', { name: 'Quellen' }).click(),
       page.getByRole('dialog', { name: 'Quellen' }))
     : page;
-  await scope
-    .locator('input[type=file]')
-    .setInputFiles({
-      name: 'eigene-notiz.txt',
-      mimeType: 'text/plain',
-      buffer: Buffer.from('Eigene Quelle für den Importtest.'),
-    });
+  await scope.locator('input[type=file]').setInputFiles({
+    name: 'eigene-notiz.txt',
+    mimeType: 'text/plain',
+    buffer: Buffer.from('Eigene Quelle für den Importtest.'),
+  });
   await expect(scope.getByText('eigene-notiz.txt')).toBeVisible();
   await page.reload();
   if (isMobile) {
