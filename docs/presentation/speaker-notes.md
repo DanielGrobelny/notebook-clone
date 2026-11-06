@@ -6,7 +6,7 @@
 
 Preview 1124615: 112 Unit-/DB-Tests, 74 E2E, 2 Storage; 2 optionale PDF-Fixtures übersprungen. 63 verbleibende any-Stellen, 0 bekannte Dependency-Befunde; negativer Client-Build gegen Server-only-Import bestanden. Echter TXT-Upload (4,09 s), Chat, Zitate und History bestanden. Kein Live-PDF-, Last- oder Performancegewinn-Nachweis. Übernommener Refactor-Prüfbericht; dieses Dokumentationspaket startet keine Provider-/DB-Tests.
 
-Demo ist Preview 1124615, nicht Production. Vercel-Login/Projektberechtigung vor der Aufnahme prüfen; der App-Besucherzugang selbst hat kein Konto.
+Demo ist Preview 1124615 (pqdwehnkq), nicht Production 257f24f. Vercel-Login/Projektberechtigung vor der Aufnahme prüfen; der App-Besucherzugang selbst hat kein Konto.
 
 ## Vor der Aufnahme: einmal wirklich durchspielen
 
@@ -81,3 +81,146 @@ Sprechvorschlag: „Der Nutzen ist der kurze Weg vom eigenen Dokument zur überp
 ## 9:00–10:00 · Reserve, kein zusätzlicher Inhalt
 
 Für Ladezeit und Tabwechsel. Bei 9:45 abschließen. Loom-Link nach Aufnahme ergänzen; keine Mail automatisch senden. Weitere offene Punkte (WebKit/A11y, Betrieb/Spendlimit, Importresilienz, unabhängiges Setup) bleiben in Reviewer und Matrix erhalten.
+
+
+## Code-Lernnotizen · sechs Deckanker vollständig erklärt
+
+Identisch in den S-Speaker-Notes. Nur zwei kurze Sprechtexte je Folie (zusammen etwa 50 Sekunden) sprechen, nicht zusätzlich den bisherigen Sprechvorschlag. Deep-Dive ist Vorbereitung. Neun Minuten plus Reserve; 21 Audit-Themen bleiben separat.
+
+### Folie 4 · Zitier-IDs gegen Kontextpassagen prüfen
+
+[lib/retrieval.ts · L97-L103](https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/lib/retrieval.ts#L97-L103)
+
+**Sprechtext · 20–30 Sekunden:** Die Antwort darf nur IDs nennen, die wir ihr wirklich mitgegeben haben. permitted sammelt diese IDs. Der Filter entfernt fremde IDs und andere Datentypen; ein zweites Set entfernt Wiederholungen. Zurück bleiben prüfbare Referenzen. Das verhindert fremde Verweise, beweist aber nicht, dass der Satz zur Passage passt.
+
+**Code-Deep-Dive · Lernnotiz, nicht vorlesen**
+
+Nutzerablauf/Vertrag: Nach der Antwort prüft validateCitationIds(ids, passages) die extrahierten IDs. Eingaben: ids: unknown und RetrievedPassage[]. Ausgabe: eindeutige erlaubte Strings.
+
+Z. 97–98: Ist ids kein Array, folgt sofort return []. Das ist eine Laufzeitprüfung, keine bloße TypeScript-Annahme.
+
+Z. 99: passages.map((p) => p.id) liest IDs tatsächlich gelieferter Passagen. new Set bildet permitted. Genau diesen Schritt zeigt der markierte Folienausschnitt; allein filtert er noch nichts.
+
+Z. 100–103: ids.filter akzeptiert nur typeof id === string UND permitted.has(id). id is string präzisiert den Typ. Das äußere Set entfernt doppelte IDs, der Spread liefert ein Array zurück.
+
+Warum/Grenze: Deterministische Referenzprüfung statt Modellvertrauen. Keine semantische Wahrheit, Vollständigkeit oder richtige Verwendung einer erlaubten Passage. Besitzprüfung erfolgt vorher; dies ersetzt weder RLS noch Schutz vor manipulativen Dokumentinhalten.
+
+### Folie 4 · Eigene ausgewählte Quellen vor dem Ranking filtern
+
+[supabase/migrations/20261105090000_exact_scoped_retrieval.sql · L9-L26](https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/supabase/migrations/20261105090000_exact_scoped_retrieval.sql#L9-L26)
+
+**Sprechtext · 20–30 Sekunden:** scoped verbindet Abschnitte mit Quelle und Notebook und filtert Besitzer, Auswahl und Bereitstatus. Erst daraus berechnet ranked Vektorabstände. Die Ausgabe wechselt nach Quellenrang, damit ein langes Dokument das andere nicht verdrängt. Höchstens zwölf Passagen kommen zurück. Die Suche findet ähnliche Bedeutung, garantiert aber weder Wahrheit noch vollständige Details.
+
+**Code-Deep-Dive · Lernnotiz, nicht vorlesen**
+
+Nutzerablauf: Ein Embedding übersetzt die Frage in einen Zahlenvektor für näherungsweise Bedeutungsvergleiche. db.rpc(match_source_chunks, …) ruft diese Datenbankfunktion auf; RPC ist hier ein benannter Funktionsaufruf, kein KI-Agent.
+
+Eingaben im Kopf: p_notebook_id, p_user_id, p_source_ids, p_query_embedding (1536 Dimensionen), p_match_count. Ausgabe: id, source_id, content, page, section, similarity. security invoker bedeutet Rechte des Aufrufers, keine automatische RLS-Umgehung.
+
+Z. 9–13: scoped AS MATERIALIZED erzeugt eine feste Zwischentabelle. c sind source_chunks, s sources, n notebooks. Joins ordnen Abschnitte dem Notebook zu.
+
+Z. 14–16: n.id = p_notebook_id; Besucher-ID muss sowohl zum Notebook als auch current_visitor_id() passen. Der historische Accountzweig vergleicht owner_id mit auth.uid(). Dazu ready, c.source_id = any(p_source_ids), vorhandenes embedding und nichtleerer Text. Eine behauptete Besitzer-ID reicht nicht.
+
+Z. 17–21: embedding <=> p_query_embedding ist Kosinusdistanz. row_number partitioniert nach source_id und sortiert je Quelle nach Abstand und id. Materialisierung verhindert, dass ungefilterte approximative Indexsuche die kleine erlaubte Teilmenge verdrängt.
+
+Z. 22–26: page/section kommen aus metadata, similarity ist 1 - distance. ORDER BY source_rank, distance, source_id, id liefert erst den besten Treffer je Quelle. LIMIT greatest(1, least(p_match_count, 12)) begrenzt auf 1 bis 12, selbst bei Eingabe 0.
+
+Warum: Quellenvergleich statt Dominanz eines langen Dokuments. Danach verteilt buildGroundedContext maximal 12.000 Zeichen fair auf Quellen. Kein gemessener Performancegewinn; exakte Suche kann teurer sein.
+
+Fehlergrenze im Aufrufer: scopedSimilaritySearch prüft vollständige Quellenliste und ready, erzeugt das Frage-Embedding und reicht AbortSignal weiter. Abbruch wird vor/nach RPC geprüft; RPC-Fehler werden geworfen, sonst return data ?? []. Kein garantierter sofortiger DB-Stopp. Ähnlichkeit ist keine Wahrheit; keine Mindestschwelle oder vollständige Detailabdeckung.
+
+### Folie 5 · Besuchertoken an unprivilegierten Datenclient binden
+
+[lib/supabase/server.ts · L4-L15](https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/lib/supabase/server.ts#L4-L15)
+
+**Sprechtext · 20–30 Sekunden:** createClient lädt die Besuchersitzung. Der Datenclient verwendet den öffentlichen anon-Key, nicht den privilegierten Service-Key. Das geheime Besuchertoken geht serverseitig im Header mit; die Datenbank prüft es erneut. visitor.id hilft bei Anwendungsfiltern, verleiht aber selbst keine Berechtigung. Ein gestohlenes gültiges Cookie bleibt ein Risiko.
+
+**Code-Deep-Dive · Lernnotiz, nicht vorlesen**
+
+Nutzerablauf/Vertrag: Eine App-API braucht eigene Quellen. createClient() hat keine Parameter und liefert einen Supabase-Client mit visitor.id. Der Browser spricht nur mit App-APIs.
+
+Z. 4–5: getVisitorSession() lädt/erstellt id und token. Ein getrennter Adminclient im Helfer löst ausschließlich gehashte Sitzungen auf bzw. legt sie an; außerhalb der Markierung.
+
+Z. 6–9: supabase(URL, ANON_KEY, Optionen) nutzt die öffentliche unprivilegierte Rolle. anon-Key ist weder individueller Besitznachweis noch geheimer Service-Role-Key.
+
+Z. 10: persistSession: false und autoRefreshToken: false verhindern Supabase-Auth-Persistenz/Refresh dieses Clients, nicht das eigene Besucher-Cookie.
+
+Z. 11–13: global.headers sendet x-visitor-token: session.token. current_visitor_id() prüft dessen SHA-256-Hash und Ablauf erneut. Das rohe Token ist geheim, nicht loggen.
+
+Z. 14–15: Object.assign(db, { visitor: { id: session.id } }) ergänzt Metadaten und gibt db zurück. Diese JavaScript-Eigenschaft umgeht keine Policy.
+
+Warum/Sicherheitsgrenze: Daten/Storage bleiben RLS-pflichtig. Der separate Service-Role-Adminclient kann RLS umgehen, darf keine normalen Notebookabfragen übernehmen und nie in den Browser gelangen. App-Filter begrenzen Auswahl; DB-Policies erzwingen Besitz zusätzlich.
+
+Nicht garantiert: HttpOnly verhindert JavaScript-Lesen, nicht jede missbräuchliche Anfrage bei XSS. Gültiger Tokendiebstahl kann die Sitzung übernehmen. Cookieverlust hat keine Recovery/Sync. Sessionfehler führen nicht in einen gemeinsamen Datenraum.
+
+### Folie 5 · Besitz für Datenzeilen und private Dateien erzwingen
+
+[supabase/migrations/20261104163000_visitor_rls.sql · L13-L20](https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/supabase/migrations/20261104163000_visitor_rls.sql#L13-L20)
+
+**Sprechtext · 20–30 Sekunden:** RLS heißt: Die Datenbank entscheidet je Zeile, ob die Besucherrolle sie verwenden darf. USING schützt bestehende Zeilen, WITH CHECK neue oder geänderte Werte. Quellen und Chats hängen am eigenen Notebook; Dateien brauchen zusätzlich richtigen Bucket und Pfad. Das schützt diesen Datenzugriff, nicht vor privilegierten Administratoren.
+
+**Code-Deep-Dive · Lernnotiz, nicht vorlesen**
+
+Nutzerablauf/Vertrag: Daten und Dateien lesen/schreiben/löschen. Eingaben: SQL-Zugriff, Zeilenwerte, Besuchertoken; Ergebnis: erlaubte oder ausgeblendete/abgewiesene Zeilen, keine Modellantwort.
+
+Voraussetzung außerhalb der Markierung: current_visitor_id() vergleicht Tokenhash und expires_at > now(). Dieser eng begrenzte security-definer-Helfer darf die Sitzungstabelle lesen; normale Abfragen werden nicht zu Adminabfragen. Aktivierte RLS aus früheren Migrationen ist Voraussetzung.
+
+Z. 13: visitor_notebooks FOR ALL TO anon: USING verlangt visitor_id = current_visitor_id(); WITH CHECK zusätzlich owner_id IS NULL. Neue/geänderte Zeilen dürfen keinen fremden Besucher oder historischen Account eintragen.
+
+Z. 14–15: visitor_sources prüft das eigene Notebook. visitor_chunks verlangt eine sichtbare Quelle; deren RLS führt die Besitzkette fort, nicht nur Existenz einer beliebigen ID.
+
+Z. 16–18: visitor_chats und visitor_artifacts prüfen Notebookbesitz. visitor_messages verlangt einen sichtbaren Chat. USING schützt bestehende Zeilen, WITH CHECK neue/geänderte Werte.
+
+Z. 19: GRANT gibt anon grundsätzliche SQL-Rechte auf storage.objects; erst Policies begrenzen die erlaubten Zeilen.
+
+Z. 20: visitor_files verlangt bucket_id = source-files, erstes Pfadsegment = current_visitor_id() und zweites Segment = eigenes Notebook. Beide Ausdrücke stehen in USING/WITH CHECK. Privater Bucket und Storage-Konfiguration gehören zur Schutzkette.
+
+Warum/Grenze: Besitz wird in der DB erneut geprüft, nicht durch Modell oder versteckte UI. Service-Role/BYPASSRLS kann normale RLS umgehen. Zusätzliche Policies, Sessiongeheimnis und Endpunkte bleiben prüfpflichtig: kein allgemeiner Sicherheitsfreibrief.
+
+### Folie 6 · Aktuelle Nutzerfrage statt SDK-History validieren
+
+[app/api/chat/route.ts · L55-L82](https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/app/api/chat/route.ts#L55-L82)
+
+**Sprechtext · 20–30 Sekunden:** Der Handler liest JSON und antwortet bei kaputtem JSON mit 400. Er übernimmt Notebook und Quellen, aber aus messages nur die aktuelle Nutzerfrage. safeParse prüft den bereinigten Vertrag; Fehler werden wieder 400. So stören Assistant-Metadaten die Rückfrage nicht mehr. Besitzprüfung und gespeicherter Verlauf kommen erst danach.
+
+**Code-Deep-Dive · Lernnotiz, nicht vorlesen**
+
+Nutzerablauf: Die zweite Frage soll auch nach langer Antwort funktionieren. Eingang: Request mit notebookId, sourceIds, messages. Ausgabe hier: JSON-400 bei Fehler oder parsed.data für den weiteren Ablauf, noch kein Stream.
+
+Z. 55–64: POST(request) deklariert body: unknown. request.json() kann scheitern; catch liefert invalid_request und Status 400. TypeScript allein validiert keinen HTTP-Body.
+
+Z. 65–74: chatRequestSchema.safeParse bekommt notebookId, sourceIds und currentUserMessages(input.messages), nicht komplette SDK-History. Der Helfer akzeptiert begrenzte User-/Assistant-Verläufe alter Tabs, verlangt abschließend user und projiziert Parts auf type/text; System-/Toolrollen werden abgewiesen.
+
+Das importierte Schema verlangt UUIDs, 1–8 Quellen und genau einen Textpart je Usernachricht. Getrimmter Text: 1–4000 Zeichen. SDK-Metadaten werden nicht als Modellhistorie vertraut.
+
+Z. 75–82: !parsed.success liefert invalid_request/400; der schließende Aufruf folgt in Z. 83. Bei Erfolg läuft der Handler weiter. Der Ausschnitt prüft noch keinen Besitz.
+
+Warum: SDK-Anzeigeformat und API-Vertrag sind verschieden. savedHistory(db, notebook.id) lädt später besitzgeschützten gespeicherten Verlauf, begrenzt auf acht Nachrichten. Aktuelle Quellenauswahl gilt weiterhin.
+
+Abbruch außerhalb der Markierung: AbortSignal.timeout(chatLimits.timeoutMs) und AbortSignal.any([request.signal, timeout]) verbinden 30 Sekunden mit Clientabbruch. Vorab abgebrochen ergibt 499; Retrieval/Provider bekommen das Signal. Keine Garantie gegen bereits angefallene Kosten oder sofortigen DB-Stopp.
+
+Grenze: Formatvalidierung beweist weder Richtigkeit noch Berechtigung. Notebook/RLS, Retrieval, Quoten und Streamfehler sind eigene spätere Schritte.
+
+### Folie 6 · Vier Fragen über lange Antwort und Reload prüfen
+
+[tests/e2e/followup-chat.spec.ts · L13-L49](https://github.com/DanielGrobelny/notebook-clone/blob/11246153df8c9740ae79dce28927d5284e2bba4d/tests/e2e/followup-chat.spec.ts#L13-L49)
+
+**Sprechtext · 20–30 Sekunden:** Der Test stellt drei Fragen und erwartet HTTP 200 sowie vollständige Mockausgabe. Die erste Antwort ist länger als 4000 Zeichen. Nach Reload wählt er die Quelle erneut und stellt Frage vier. Jede Anfrage soll nur eine Usernachricht mit Textpart enthalten. Das belegt den Transportvertrag, nicht echte Modellqualität.
+
+**Code-Deep-Dive · Lernnotiz, nicht vorlesen**
+
+Aufbau außerhalb der Markierung: setupRealSource erstellt eine synthetische Quelle; page.on(request) sammelt /api/chat-JSON in payloads. Fixture: lokaler Provider-Mock. Eingang: synthetischer CV, vier Fragen, Desktop/Mobile-UI; Ergebnis: Assertions und JSON-Artefakt.
+
+Z. 13–20: for turn = 1 bis 3 füllt das Feld. LONG_CV_RESPONSE in Frage eins ist Mocktrigger für lange Ausgabe. Folgefragen verwenden turn im Text.
+
+Z. 21–28: waitForResponse wird vor dem Klick registriert. Erwartet: HTTP 200, genau turn Antwortblöcke, Endmarker ENDE DER VOLLSTÄNDIGEN ANTWORT und kein Abbruchbutton. Das prüft Test-UI-Abschluss, nicht echten Modell-Finishgrund.
+
+Z. 30–36: Erste Antwort über 4000 Zeichen. Nach reload bleiben drei Antworten. isMobile öffnet den Quellendialog, Desktop verwendet page. e2e-quelle.txt wird erneut ausgewählt, mobiler Dialog geschlossen.
+
+Z. 37–42: Frage vier nach Reload; wieder 200, vier Antwortblöcke und Endmarker. Persistenz und erneutes Fragen sind in dieser Konfiguration geprüft.
+
+Z. 43–47: payload.messages hat Länge 1 und role user. Sortierte Schlüssel des ersten Parts sind genau text und type. Das erkennt mitgesendete Assistant-History/Part-Metadaten, nicht jedes denkbare bösartige Feld.
+
+Z. 48–49: testInfo.attach beginnt actual-sdk-payloads mit JSON.stringify(payloads, null, 2); contentType/Abschluss folgen außerhalb der Markierung. Der tatsächliche Vertrag bleibt nachlesbar.
+
+Warum/Grenze: Regression am konkreten Folgefragenfehler statt nur Erstturn. Kein Live-OpenAI-, Last-, vollständiger Sicherheits- oder semantischer Qualitätsnachweis. Mobile ist Emulation, keine Garantie für jede Handytastatur.

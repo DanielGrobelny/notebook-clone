@@ -1,0 +1,48 @@
+{
+  "sourceCommit": "11246153df8c9740ae79dce28927d5284e2bba4d",
+  "markedSnippet": "lib/retrieval.ts#L99 explained within L97-L103",
+  "anchors": [
+    {
+      "slide": 4,
+      "path": "lib/retrieval.ts",
+      "anchor": "L97-L103",
+      "title": "Zitier-IDs gegen Kontextpassagen prüfen",
+      "paragraphs": 5
+    },
+    {
+      "slide": 4,
+      "path": "supabase/migrations/20261105090000_exact_scoped_retrieval.sql",
+      "anchor": "L9-L26",
+      "title": "Eigene ausgewählte Quellen vor dem Ranking filtern",
+      "paragraphs": 8
+    },
+    {
+      "slide": 5,
+      "path": "lib/supabase/server.ts",
+      "anchor": "L4-L15",
+      "title": "Besuchertoken an unprivilegierten Datenclient binden",
+      "paragraphs": 8
+    },
+    {
+      "slide": 5,
+      "path": "supabase/migrations/20261104163000_visitor_rls.sql",
+      "anchor": "L13-L20",
+      "title": "Besitz für Datenzeilen und private Dateien erzwingen",
+      "paragraphs": 8
+    },
+    {
+      "slide": 6,
+      "path": "app/api/chat/route.ts",
+      "anchor": "L55-L82",
+      "title": "Aktuelle Nutzerfrage statt SDK-History validieren",
+      "paragraphs": 8
+    },
+    {
+      "slide": 6,
+      "path": "tests/e2e/followup-chat.spec.ts",
+      "anchor": "L13-L49",
+      "title": "Vier Fragen über lange Antwort und Reload prüfen",
+      "paragraphs": 8
+    }
+  ]
+}
