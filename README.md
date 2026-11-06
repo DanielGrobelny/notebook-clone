@@ -93,3 +93,7 @@ Der Chatheader zeigt den aktiven Notebooknamen auch mobil und aktualisiert ihn n
 ## Reviewer- und Loom-Paket
 
 [Präsentation, Sprechertext und 21-Themen-Audit](docs/presentation/README.md) · [Live-Demo](https://notebook-clone-preview.vercel.app). Loom-Aufnahme noch offen; Link nach Aufnahme ergänzen. Privates Repository: Reviewerzugriff vorher freigeben.
+
+## Produktvorführung
+
+[Sieben visuelle Folien](public/presentation/index.html) · [Recording Guide: neun Minuten + Reserve](docs/presentation/speaker-notes.md) · [Reviewer Guide](docs/presentation/reviewer-guide.md) · [21 Prüfthemen](docs/presentation/acceptance-matrix.md)

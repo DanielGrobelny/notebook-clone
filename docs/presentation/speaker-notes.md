@@ -1,69 +1,77 @@
-# Sprechertext / Ablauf
+# Recording Guide – Lumen in neun Minuten
 
-8:50 Inhalt + 0:30 Puffer = 9:20. Anhang nur Review.
+[Deck](../../public/presentation/index.html) · [Reviewer](reviewer-guide.md) · [21 Prüfthemen](acceptance-matrix.md) · [Live-App](https://notebook-clone-preview.vercel.app)
 
-## 0:00 Aufgabe & Scope
+## Vor der Aufnahme: einmal wirklich durchspielen
 
-Everlast NotebookLM-Klon: Upload → Frage → Originalbeleg. KI erwünscht, Ergebnisse überprüfbar.
+UI-/Codebezug: Production 257f24fa5b56fa723b8a2054f9e6dab0bd358f2e (06.11.2026). Keine Appänderung durch dieses Paket. Umfang aus PROJECT.md: PDF/Text, Quellenwahl, belegter Chat, Persistenz. OCR, Audio, URLimport, Sync und Accounts sind außerhalb des MVP. Fixtures werden manuell importiert, nicht automatisch geseedet.
 
-Production-Code 257f24f · 06.11.2026. Kein SaaS. Sieben Tage ab 03.11.
+- Browser mindestens 1280×720, 100 % Zoom. Benachrichtigungen aus, keine privaten Tabs oder Dokumente sichtbar. Nur Aufnahmefenster teilen.
+- Tabs: 1 Deck, 2 Live-App, 3 vorbereitetes Notebook, 4 Zitier-ID-Code, 5 RLS-Code, 6 Mehrturn-Test. Code-Links unten vorab öffnen; privaten GitHubzugriff prüfen.
+- Pfeile/Space navigieren, Escape Übersicht, S Speaker Notes (Popup zulassen). Guide auf zweitem Bildschirm. Reveal braucht Internet/jsDelivr. HTML-Guide, Reviewer und Matrix funktionieren lokal ohne JavaScript/CDN; externe Links brauchen Netz.
+- Dateien: [mission.pdf](../../public/presentation/fixtures/mission.pdf), [mission.txt](../../public/presentation/fixtures/mission.txt), [update.txt](../../public/presentation/fixtures/update.txt). mission.pdf ist ein einseitiges Text-PDF; mission.txt derselbe Inhalt als Alternative. Nicht beide Briefingvarianten gleichzeitig importieren.
+- Nur eigene autorisierte Vorführsitzung und synthetische Daten. Echte Imports/Antworten benötigen Providerbudget. Vorbereitung und Aufnahme können 12 Claims/Stunde erreichen (Chat zwei Claims, Import zusätzlich). Genügend Abstand planen; niemals Limits durch neue Cookies umgehen.
+- App: „Notebooks wechseln“ → „+ Notebook“ → „AURORA – vorbereitet“. mission.pdf und update.txt per Datei-Upload hinzufügen. Auf „Bereit“ warten, beide Quellen auswählen. Die drei Fragen unten wirklich stellen, Antworten und Belege mit den Dateien abgleichen. Keine Antworttexte injizieren, keine Mockroute verwenden.
+- Vorbereitetes Notebook im gleichen Browserprofil in Tab 3 öffnen. Cookie behalten; nach Reload Quellen erneut auswählen. Gespeicherten Verlauf und Belegöffnung prüfen. Dies ist ein vorbereiteter echter Lauf, keine garantierte Musterantwort.
+- Tab 2: weiteres Notebook „AURORA – Aufnahme“ anlegen, leer lassen. Alternativ Imports vorab vorbereiten und dies ausdrücklich sagen. Kein automatischer Production-Seed. Fehlt Providerfreigabe, keine erfolgreiche Live-Modellvorführung behaupten.
+- Mikrofon, Loom-Fenster, sichtbare Maus und Lesbarkeit testen. 9:00 Inhalt + 1:00 Reserve. Reviewerfreigabe und Loom-Link vor Abgabe separat prüfen.
 
-## 0:30 Bewusst priorisiert
+## 0:00–0:45 · Folie 1 · Aufgabe
 
-PDF/Text, Quellenfilter, belegter Chat, Persistenz. Notizen/Briefings als Zusatz.
+Klick: Deck, Folie 1. Produktprinzip zeigen, keine Tabelle erklären.
 
-Nicht Production: Accounts, OCR, Audio, URL/Websuche, Sync. Next/React/TS + Supabase + AI SDK statt unnötiger Frameworks.
+Sprechvorschlag: „Lumen macht aus eigenen Dokumenten einen Dialog, bei dem ich die Antwort am Original nachprüfen kann. Ich zeige den Weg vom PDF zur Frage und zum Beleg. Im MVP bleiben Quellen und Gespräch erhalten. OCR, Audio und ein Accountsystem sind bewusst nicht Teil dieser Version. Das hier ist das Produktprinzip – die echte Anwendung sehen wir jetzt.“
 
-## 1:05 Live: Quelle → Antwort → Original
+## 0:45–3:45 · Folie 2 → Tab 2 · echte Demo
 
-mission.txt importieren. „Wann startet AURORA, mit welchem Budget?“ Zitat öffnen. „Wer verantwortet das?“ „Was ist noch offen?“ Reload und Quelle erneut auswählen.
+0:45–1:15: Folie 2 kurz zeigen, zur Live-App wechseln. Im Notebook „AURORA – Aufnahme“ mission.pdf per Datei-Upload wählen. „Das ist ein synthetisches Projektbriefing für einen Kundenservice-Piloten, keine Kundendatei.“ Dann update.txt importieren. Alternativ exakt den Dateiinhalt per Texteingabe als Quelle speichern, nicht als Chatfrage. Beide Quellen müssen „Bereit“ und ausgewählt sein.
 
-Nur autorisierte eigene synthetische Vorführsitzung. Drei Antworten kosten sechs Claims plus Import. Keine privaten Daten, kein Fake-Erfolg.
+1:15–2:10: Feld „Frage an deine Quellen“ → Frage 1 → „Frage senden“. Während Stream nicht hektisch klicken. Zitat der Antwort öffnen und Originalpassage/Dateiname zeigen.
 
-## 3:20 Grenzfall: fehlende Evidenz
+Frage 1: „Welcher Pilotstart gilt nach der Änderungsnotiz, und welches Budget bleibt bestehen?“
 
-„Wie hoch ist die Jahresfinanzierung?“ Die Quelle entscheidet das nicht.
+Erwartungsprüfung, kein vorgegebener Antworttext: 23. November 2026 und 18.000 Euro. update.txt Abschnitt 1/2. Ursprünglicher 16. November: mission.pdf Seite 1, Abschnitt 2. Textquelle hat keine garantierte PDF-Seitennummer.
 
-Pilotbudget ist nicht Jahresfinanzierung. Optional update.txt für Versionskonflikt; kein Webwissen-Fallback.
+Sprechvorschlag: „Ich möchte nicht nur eine plausible Zahl. Ich öffne den Beleg und prüfe, ob Termin und Budget wirklich in der Änderungsnotiz stehen.“ Nur behaupten, was sichtbar ist.
 
-## 3:55 Architektur & Trust Boundaries
+2:10–2:45: Beleg schließen. Rückfrage im selben Gespräch: „Wer verantwortet das?“ Erwartung: Mira Sommer, update.txt Abschnitt 2 oder mission.pdf Seite 1 Abschnitt 3. „Die Rückfrage nutzt den Gesprächskontext; die Aussage braucht trotzdem einen aktuellen Beleg.“
 
-Browser → Next.js API → Supabase RLS/pgvector/privater Storage. API → OpenAI.
+2:45–3:45: update.txt per Quellenbutton abwählen, mission.pdf ausgewählt lassen. Frage 3: „Welcher ursprüngliche Pilotstart steht im ausgewählten Projektbriefing? Antworte nur aus dieser Quelle.“ Erwartung: 16. November 2026, mission.pdf Seite 1 Abschnitt 2. „Jetzt verändere ich bewusst den Quellenraum. Nur das ursprüngliche Briefing ist ausgewählt. Der Verlauf darf die aktuelle Quelle nicht ersetzen.“ Antwort und Dateiname im Beleg prüfen, nicht automatisch Erfolg behaupten.
 
-HttpOnly/Secure/SameSite-Cookie, Hash/30 Tage. Service Role nur Sessiontabelle; Datenclient anon+Token. Autorisierung außerhalb Modell.
+Optional nur bei Reserve: „Ist eine Jahresfinanzierung beschlossen?“ Beide Dokumente verneinen dies; Pilotbudget nicht hochrechnen. Keine vierte Frage nötig.
 
-## 4:50 Import: Herkunft erhalten
+### Ehrlicher Timeout- und Fehlerfallback
 
-PDF/Text → Extraktion → 1800-Zeichen-Chunks → Embeddings/Persistenz.
+Import nach etwa 20 Sekunden oder Chat nach 30-Sekunden-Timeout nicht mehrfach neu senden. Sagen: „Der aktuelle Lauf wartet beziehungsweise ist fehlgeschlagen. Ich wechsle zu einem vorher vorbereiteten echten Lauf, damit ich den Ablauf und den Originalbeleg zeigen kann.“ Tab 3: gespeicherte Antwort und Beleg öffnen, ausdrücklich als vorher erzeugt benennen. Bei falschem Inhalt: „Diese Antwort deckt die Quelle nicht korrekt ab. Genau deshalb bleibt der Originalbeleg wichtig.“ Kein Standbild als live, kein verdeckter Schnitt zur fingierten Antwort. Gibt es keinen geprüften echten Lauf, nur Dokumente/UI zeigen und fehlenden Live-Nachweis nennen. Reserve nicht mit neuen Provideranfragen verbrauchen.
 
-5 MiB/100 Seiten/500k Zeichen; kein OCR. SHA256+Uniqueindex. Synchron statt Queue, Prozessverlust/Cleanupfehler und Importtimeout offen.
+## 3:45–5:15 · Tab 1, Folie 3 · Architektur
 
-## 5:35 Retrieval: erst Scope, dann Distanz
+Sprechvorschlag: „Wir folgen demselben Weg technisch. PDF und Text werden extrahiert und in kleine Abschnitte zerlegt; die Seitenherkunft bleibt erhalten. Embeddings helfen, passende Abschnitte zu finden. Zuerst gelten Besitz und Quellenauswahl, erst danach die Suche. Das Modell bekommt begrenzten Kontext, die Oberfläche den Stream und den Originalbeleg. Der Browser spricht nur mit der Next.js-API. Postgres mit pgvector hält die Daten, ein privater Speicher die Dateien. Die API ruft den Modellprovider auf. Zugriffskontrolle entscheidet nicht das Modell. Das hält die Architektur für den MVP überschaubar; begrenztes Retrieval kann aber relevante Details übersehen.“
 
-Auswahl/Besitz/ready → materialisierte exakte SQL-Suche → quellenfaire Rangfolge → Kontext → Stream/Zitat.
+## 5:15–6:15 · Folie 4 → Tab 4 · Entscheidung 1
 
-8 Quellen, 12 Chunks, 12000 Zeichen. RAG begrenzt Kosten, kann Details verlieren. ID-Validität nicht semantische Wahrheit; historische IVFFlat-Ursache nur plausibel.
+Klick: [Zitier-ID-Prüfung](https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/lib/retrieval.ts#L46-L49), Zeilen 46–49. Optional [Scoped Retrieval](https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/supabase/migrations/20261105090000_exact_scoped_retrieval.sql#L9-L26), Zeilen 9–26. Codezoom bei Bedarf erhöhen; nicht durch Imports scrollen.
 
-## 6:30 Tests: Vertrag ≠ Modellqualität
+Sprechvorschlag: „Das erste Problem ist eine plausible, aber unbelegte Antwort. Deshalb begrenze ich die Antwort auf den gewählten Quellenraum und verknüpfe sie mit Originalpassagen. Hier werden nur Beleg-IDs akzeptiert, die tatsächlich aus dem aktuellen Retrieval stammen. In der Suche werden Notebook, Besitzer und ausgewählte bereite Quellen zuerst eingeschränkt. Der Trade-off ist begrenzter Kontext statt jedes Mal alle Dokumente zu senden. Eine erlaubte ID beweist noch nicht, dass der Satz inhaltlich richtig ist.“
 
-105 Unit/DB · 72 Chromium · 2 Storage · Typecheck/Build. Identischer aktueller Appbaum, 06.11.
+## 6:15–7:15 · Folie 5 → Tab 5 · Entscheidung 2
 
-Zwei optionale PDF-Fixtures übersprungen. Kein neuer Vollsuite-Lauf. Historische echte Mehrturn-Smokes getrennt. WebKit/Recall offen; v1 5/6 fehlgeschlagen, v2 unvollständig.
+Klick: [RLS- und Storage-Policies](https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/supabase/migrations/20261104163000_visitor_rls.sql#L13-L20), Zeilen 13–20. Bei Bedarf [Datenclient](https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/lib/supabase/server.ts#L8-L12), Zeilen 8–12.
 
-## 7:15 Limits ≠ hartes Gesamtbudget
+Sprechvorschlag: „Das zweite Problem ist ein einfacher Einstieg ohne gemeinsamen Datenraum. Der Nutzer braucht keinen Account, bekommt aber einen getrennten Arbeitsbereich. Ein zufälliges HttpOnly-Cookie wird serverseitig zugeordnet. Die Datenbank bekommt einen unprivilegierten Client mit Besuchertoken und prüft den Besitz über RLS erneut. Hier sieht man die Notebookregel und darunter die Regel für private Dateien. Die Grenze ist klar: Wenn das Cookie verloren geht, gibt es keine Wiederherstellung und keinen geräteübergreifenden Sync.“
 
-12 Provider-Claims je Besucher/Stunde. Chat zwei Claims. 4096 Outputtokens, 30 Sekunden, keine Auto-Retries.
+## 7:15–8:15 · Folie 6 → Tab 6 · KI-Workflow & Prüfung
 
-Cookie-Neuanlage umgeht Quote. Spendlimit unbestätigt. Importembedding vs Chatinput/output/queryembedding getrennt kalkulieren, keine erfundenen Eurobeträge.
+Klick: [Request-Fix](https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/app/api/chat/route.ts#L23-L36), Zeilen 23–36; [Regressionstest](https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/tests/e2e/followup-chat.spec.ts#L8-L22), Zeilen 8–22. Historie: [PR 24](https://github.com/DanielGrobelny/notebook-clone/pull/24), [PR 25](https://github.com/DanielGrobelny/notebook-clone/pull/25), [PR 26](https://github.com/DanielGrobelny/notebook-clone/pull/26).
 
-## 7:55 KI-Workflow: konkrete Korrektur
+Sprechvorschlag: „An einem konkreten Fehler lässt sich der Qualitätsanspruch zeigen. Bei einer Rückfrage enthielt die SDK-History Assistant-Metadaten; die strikte Anfrageprüfung antwortete mit 400. Der Fix verarbeitet den aktuellen Userturn und lädt den Verlauf aus autorisiertem Speicher. Dieser Regressionstest sendet mehrere Fragen, lädt neu und prüft den Requestvertrag. KI-Unterstützung kann Code und Tests vorschlagen; Review muss den tatsächlichen Vertrag und die Fehlerfälle prüfen. Die PRs zeigen solche Korrekturschleifen, nicht eine perfekte Erstimplementierung. Der Test verwendet einen Mock: Er belegt Technik, nicht Modellqualität. Ein aktueller semantischer Qualitätsgate ist noch offen.“
 
-SDK-History mit Assistant-Metadaten → Folgefrage 400. Fix: aktueller Userturn und autorisierte Serverhistory.
+Bei Eval-Rückfrage: Historischer v1-Lauf hatte 5/6 Fehlschläge. v2 war unvollständig und nicht vollständig manuell bewertet. Das ist kein gemessener Fehleranteil der heutigen App. Details im Reviewer Guide. Keine neuen Suite-/Providerläufe durch dieses Paket behaupten. Persönliche Erfahrungen nur ergänzen, wenn sie wirklich stattgefunden haben.
 
-PR24: reproduzierter Vertrag/Regression, isolierter Lauf, realer Vierturn-Smoke. Keine erfundenen TDD/Junior-Sessions. Junior-Vorschlag: OCR-Fehlerfixture ohne Productionrechte.
+## 8:15–9:00 · Folie 7 · Fazit
 
-## 8:30 Kern liefern, Grenzen zeigen
+Sprechvorschlag: „Der Nutzen ist der kurze Weg vom eigenen Dokument zur überprüfbaren Antwort. Import, Dialog und Originalbeleg bilden den Kern. Die relevante Grenze bleibt die semantische Richtigkeit: Eine technisch gültige Referenz reicht nicht. Als nächsten Schritt würde ich die aktuelle Version mit festen Fragen und manueller Belegbewertung evaluieren. Produkt und Repository sind hier verlinkt; die detaillierten 21 Prüfthemen liegen separat für das Review bereit.“
 
-21 Prüfthemen mit Codebelegen. Nächste Schritte: semantische/Recall-Evals, WebKit/A11y, Importresilienz, Betrieb und Spendprüfung.
+## 9:00–10:00 · Reserve, kein zusätzlicher Inhalt
 
-1000 Nutzer nicht getestet. Private Repozugriffe vor Versand freigeben. Loom noch aufnehmen; Antwortmail nur Entwurf. Anhang nicht mitsprechen.
+Für Ladezeit und Tabwechsel. Bei 9:45 abschließen. Loom-Link nach Aufnahme ergänzen; keine Mail automatisch senden. Weitere offene Punkte (WebKit/A11y, Betrieb/Spendlimit, Importresilienz, unabhängiges Setup) bleiben in Reviewer und Matrix erhalten.

@@ -1,11 +1,11 @@
-# Loom-Paket
+# Produktvorführung / Aufnahme-Paket
 
-[Deck](../../public/presentation/index.html) · [Reviewer](reviewer-guide.md) · [Matrix](acceptance-matrix.md) · [Sprechertext](speaker-notes.md)
+Sieben visuelle Folien, 9:00 Minuten Inhalt + 1:00 Reserve. Kein Audit-Anhang im Deck.
 
-Start aus Repo: `python3 -m http.server 4397 --bind 127.0.0.1 --directory public` (Port vorher prüfen), dann http://127.0.0.1:4397/presentation/. Kein Appbuild/Secret nötig.
+[Deck](../../public/presentation/index.html) · [Recording Guide mit Sprechtext](speaker-notes.md) · [Reviewer](reviewer-guide.md) · [21 Prüfthemen](acceptance-matrix.md)
 
-Reveal.js 5.2.1 via jsDelivr: Internet erforderlich. Pfeile/Space navigieren, Escape Übersicht, S Speaker-Ansicht (Popup erlauben). 11 Hauptfolien + 22 Anhangfolien. 8:50 Inhalt + 0:30 Wechselpuffer = 9:20.
+Lokal: python3 -m http.server 4397 --bind 127.0.0.1 --directory public (Port vorher prüfen), dann http://127.0.0.1:4397/presentation/.
 
-CDN-Ausfall: reviewer.html und Markdown funktionieren ohne JavaScript. Echte Offline-Slideshow erfordert lokale Reveal-Dateien nach Lizenzprüfung und angepasste Referenzen. PDF: ?print-pdf aufrufen → Drucken/PDF, Querformat/Hintergründe; Hauptfolien auswählen.
+Reveal.js 5.2.1 benötigt Internet/jsDelivr. Pfeile/Space navigieren, Escape Übersicht, S Speaker Notes (Popups zulassen). HTML-Guide, Reviewer und Matrix lokal ohne JavaScript/CDN lesbar. Bei CDN-Ausfall erscheinen Folien untereinander; keine Offline-Reveal-Garantie.
 
-Nur synthetische Fixtures. Autorisierte eigene Vorführsitzung und Providerbudget vor Aufnahme prüfen. Reload verlangt erneute Auswahl. Kein Seeding privater Daten. Loom noch nicht aufgenommen; tatsächlichen Link nach Aufnahme ergänzen. Privaten Reviewerzugriff vor Versand testen. Antwortmail nicht senden.
+Nur synthetische Fixtures. PDF und TXT des Briefings sind Alternativen, Änderungsnotiz ist zweite Quelle. Vorbereitetes Notebook manuell in eigener autorisierter Sitzung erstellen, keine automatischen Seeds. Guide enthält Fragen, Fundstellen, Klicks und ehrlichen Timeoutfallback. App-/Codebezug: Production 257f24f. Kein neuer Modellqualitätstest durch dieses Paket. Loom-Aufnahme und Reviewerfreigabe noch erforderlich.
