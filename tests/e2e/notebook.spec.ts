@@ -7,14 +7,6 @@ async function noOverflow(page: import('@playwright/test').Page) {
   ]);
   expect(w[0]).toBeLessThanOrEqual(w[1]);
 }
-async function source(page: import('@playwright/test').Page, isMobile: boolean, name: RegExp) {
-  if (isMobile) {
-    await page.getByRole('button', { name: 'Quellen' }).click();
-    const b = page.getByRole('dialog', { name: 'Quellen' }).getByRole('button', { name });
-    await b.click();
-    await page.getByRole('button', { name: 'Quellen schließen' }).click();
-  } else await page.getByRole('button', { name }).click();
-}
 test('Auswahl, Versand und Modellgrenze', async ({ page, isMobile }) => {
   await page.route('**/api/chat', (route) =>
     route.fulfill({
@@ -34,7 +26,7 @@ test('Auswahl, Versand und Modellgrenze', async ({ page, isMobile }) => {
   await expect(page.getByText('Die Modellanbindung ist noch nicht konfiguriert')).toBeVisible();
   await noOverflow(page);
 });
-test('Ohne Quellen ist Versand gesperrt', async ({ page, isMobile }) => {
+test('Ohne Quellen ist Versand gesperrt', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByLabel('Frage an deine Quellen')).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Frage senden' })).toBeDisabled();

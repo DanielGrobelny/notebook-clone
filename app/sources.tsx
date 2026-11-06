@@ -35,25 +35,32 @@ export function Sources({
     chunks: Array<{ id: string; content: string; metadata: { page?: number; section?: string } }>;
   } | null>(null);
   const input = useRef<HTMLInputElement>(null);
-  const load = useCallback(
-    async (signal?: AbortSignal) => {
-      if (!notebookId) {
-        setItems([]);
-        return;
-      }
-      const r = await apiRequest('/api/notebooks/' + notebookId + '/sources', { signal });
-      if (r.ok) setItems((await r.json()).sources);
+  const fetchItems = useCallback(
+    async (signal?: AbortSignal): Promise<RealSource[] | null> => {
+      if (!notebookId) return null;
+      const response = await apiRequest('/api/notebooks/' + notebookId + '/sources', { signal });
+      if (!response.ok) throw Error('Laden fehlgeschlagen.');
+      const data = await response.json();
+      return data.sources as RealSource[];
     },
     [notebookId],
   );
+  const load = async () => {
+    const next = await fetchItems();
+    if (next) setItems(next);
+  };
   useEffect(() => {
     const controller = new AbortController();
-    void load(controller.signal).catch((error: unknown) => {
-      if (!controller.signal.aborted)
-        setError(error instanceof Error ? error.message : 'Laden fehlgeschlagen.');
-    });
+    void fetchItems(controller.signal)
+      .then((next) => {
+        if (!controller.signal.aborted && next) setItems(next);
+      })
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted)
+          setError(error instanceof Error ? error.message : 'Laden fehlgeschlagen.');
+      });
     return () => controller.abort();
-  }, [load]);
+  }, [fetchItems]);
   const upload = async (file?: File, text?: string) => {
     if (pending.current || (!file && text === undefined)) return;
     if (!notebookId) {

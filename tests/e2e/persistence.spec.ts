@@ -2,8 +2,6 @@ import { expect, test } from './test-fixture';
 
 test('Besuchersitzung und Notebook-CRUD bleiben nach Reload erhalten', async ({ page }) => {
   const suffix = Date.now().toString(36);
-  const email = 'visitor-ui-' + suffix + '@example.test';
-  const password = 'Visitor-ui-password';
   const initial = 'Visitor Notebook ' + suffix;
   const renamed = initial + ' umbenannt';
 

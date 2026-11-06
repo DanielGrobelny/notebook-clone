@@ -13,7 +13,7 @@ vi.mock('next/headers', () => ({
   cookies: async () => ({ get: () => (m.cookie ? { value: m.cookie } : undefined), set: m.set }),
   headers: async () => ({ get: () => (m.secure ? 'https' : 'http') }),
 }));
-vi.mock('../lib/supabase/server', () => ({
+vi.mock('../lib/supabase/admin', () => ({
   adminClient: () => ({
     from: () => {
       const q: any = {

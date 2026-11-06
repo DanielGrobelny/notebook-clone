@@ -13,10 +13,6 @@ const admin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
   { auth: { autoRefreshToken: false, persistSession: false } },
 );
-const stamp = Date.now().toString(36);
-const email = `source-storage-${stamp}@example.test`;
-const password = 'Source-storage-test-2026!';
-const title = `Source Storage ${stamp}`;
 const file = {
   name: 'source-evidence.txt',
   mime: 'text/plain',
@@ -59,7 +55,6 @@ async function counts(sourceId: string, storagePath: string) {
 test('Source: App-Import und App-Löschung hinterlassen Storage und Chunks konsistent', async ({
   page,
 }) => {
-  let userId: string | undefined;
   let notebookId: string | undefined;
   let sourceId: string | undefined;
   try {

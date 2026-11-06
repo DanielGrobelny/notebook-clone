@@ -1,6 +1,5 @@
 import { createServer, type Server } from 'node:http';
 let server: Server | undefined;
-let requests = 0;
 const failed = new Set<string>();
 function completedResponse(text: string) {
   return {
@@ -119,7 +118,6 @@ async function streamResponse(
 }
 export default async function globalSetup() {
   server = createServer(async (req, res) => {
-    requests++;
     const chunks: Buffer[] = [];
     for await (const chunk of req) chunks.push(Buffer.from(chunk));
     const raw = Buffer.concat(chunks).toString('utf8');

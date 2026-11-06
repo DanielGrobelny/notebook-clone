@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useEffectEvent, useState, useRef } from 'react';
 type Notebook = { id: string; title: string };
 let bootstrap: Promise<Notebook[]> | null = null;
 async function initial() {
@@ -70,11 +70,36 @@ export function Persistence({
       onError?.(message);
     }
   };
+  const reportLoaded = useEffectEvent((notebooks: Notebook[]) => {
+    setError('');
+    onError?.('');
+    setItems(notebooks);
+    choose(notebooks.find((n) => n.id === activeId.current) ?? notebooks[0] ?? null);
+  });
+  const reportFailure = useEffectEvent(() => {
+    const message =
+      'Arbeitsbereich nicht verfügbar. Bitte Backend-Konfiguration prüfen und erneut versuchen.';
+    setError(message);
+    onError?.(message);
+  });
   useEffect(() => {
-    void load();
-    const retry = () => void load();
-    window.addEventListener('retry-workspace', retry);
-    return () => window.removeEventListener('retry-workspace', retry);
+    let active = true;
+    const start = () => {
+      void initial().then(
+        (notebooks) => {
+          if (active) reportLoaded(notebooks);
+        },
+        () => {
+          if (active) reportFailure();
+        },
+      );
+    };
+    start();
+    window.addEventListener('retry-workspace', start);
+    return () => {
+      active = false;
+      window.removeEventListener('retry-workspace', start);
+    };
   }, []);
   const create = async () => {
     const title = prompt('Name des Notebooks');

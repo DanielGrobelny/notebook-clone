@@ -155,7 +155,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const embeddings = await embedTexts(
       chunks.map((c) => c.content),
       config.apiKey,
-      undefined,
+      AbortSignal.any([request.signal, AbortSignal.timeout(25000)]),
       config.baseURL,
     );
     if (!chunks.length) throw new Error('Die Quelle enthält keinen importierbaren Text.');

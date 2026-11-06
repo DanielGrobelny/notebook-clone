@@ -126,11 +126,7 @@ export default function Home() {
   const [readyIds, setReadyIds] = useState<string[]>([]);
   useEffect(() => {
     let alive = true;
-    if (!notebookId) {
-      setSourceCount(0);
-      setReadyIds([]);
-      return;
-    }
+    if (!notebookId) return;
     fetch('/api/notebooks/' + notebookId + '/sources')
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => {
@@ -151,10 +147,7 @@ export default function Home() {
   }, [notebookId, selected]);
   useEffect(() => {
     let alive = true;
-    if (!notebookId) {
-      setHistory([]);
-      return;
-    }
+    if (!notebookId) return;
     fetch('/api/notebooks/' + notebookId + '/history')
       .then(async (r) => (r.ok ? r.json() : null))
       .then((data) => {
@@ -186,11 +179,8 @@ export default function Home() {
     const messageId = latest.id;
     const assistantMessageId = (latest.metadata as { assistantMessageId?: string } | undefined)
       ?.assistantMessageId;
-    setCitationSync({ messageId, state: 'pending' });
-    if (!assistantMessageId) {
-      setCitationSync({ messageId, state: 'failed' });
-      return;
-    }
+    // Persisted history has no stream metadata and needs no reconciliation.
+    if (!assistantMessageId) return;
     let active = true;
     const run = ++syncRun.current;
     const controller = new AbortController();
@@ -298,6 +288,11 @@ export default function Home() {
             void stop();
             setMessages([]);
             setHistory([]);
+            setSourceCount(0);
+            setReadyIds([]);
+            setCitationSync(null);
+            setProcessing(false);
+            setLastQuestion(null);
             setCitation(null);
             followLatest.current = true;
             setShowLatest(false);
@@ -421,8 +416,7 @@ export default function Home() {
                         </div>
                       ) : (
                         <small className="evidence-note">
-                          {citationSync?.messageId === message.id &&
-                          citationSync.state === 'pending'
+                          {persistedAssistantId && citationSync?.messageId !== message.id
                             ? 'Belege werden noch gespeichert.'
                             : citationSync?.messageId === message.id &&
                                 citationSync.state === 'timeout'
@@ -601,6 +595,7 @@ export default function Home() {
                   Lade eigene Dokumente hoch. Wähle Quellen für deine Frage aus.
                 </p>
                 <Sources
+                  key={activeNotebook?.id}
                   selected={selected}
                   onToggle={toggle}
                   onRemove={(id) =>

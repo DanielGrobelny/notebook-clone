@@ -37,7 +37,7 @@ export async function scopedSimilaritySearch(
     sourceError ||
     !sources ||
     sources.length !== new Set(sourceIds).size ||
-    sources.some((s: any) => s.status !== 'ready')
+    sources.some((s: { status: string }) => s.status !== 'ready')
   )
     throw new Error('sources_unavailable');
   const [embedding] = await embedTexts([input.question], input.apiKey, input.signal);

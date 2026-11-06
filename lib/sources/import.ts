@@ -68,10 +68,10 @@ export async function extractText(bytes: Uint8Array, mime: string): Promise<Extr
     return { text, sections };
   }
   assertPdf(bytes);
-  let documentProxy: any;
+  let documentProxy: import('pdfjs-dist').PDFDocumentProxy | undefined;
   try {
     if (!globalThis.DOMMatrix) {
-      (globalThis as any).DOMMatrix = class {
+      (globalThis as unknown as { DOMMatrix: unknown }).DOMMatrix = class {
         a = 1;
         b = 0;
         c = 0;
@@ -84,12 +84,13 @@ export async function extractText(bytes: Uint8Array, mime: string): Promise<Extr
       };
     }
     /* Explicit import ensures the worker is traced into serverless output. */ (
-      globalThis as any
+      globalThis as typeof globalThis & { pdfjsWorker?: unknown }
     ).pdfjsWorker = await import('pdfjs-dist/legacy/build/pdf.worker.mjs');
     const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
     const task = pdfjs.getDocument({ data: bytes.slice(), stopAtErrors: false });
     documentProxy = await task.promise;
-  } catch (error: any) {
+  } catch (caught: unknown) {
+    const error = caught instanceof Error ? caught : new Error('Unknown PDF error');
     if (error?.name === 'PasswordException') throw new Error('Dieses PDF ist passwortgeschützt.');
     if (error?.name === 'InvalidPDFException')
       throw new Error('Das PDF ist beschädigt oder kann nicht gelesen werden.');
@@ -114,7 +115,7 @@ export async function extractText(bytes: Uint8Array, mime: string): Promise<Extr
       const content = await page.getTextContent();
       const pageText = cleanText(
         content.items
-          .map((item: any) => ('str' in item ? item.str : ''))
+          .map((item) => ('str' in item ? item.str : ''))
           .filter(Boolean)
           .join(' '),
       );
@@ -129,7 +130,8 @@ export async function extractText(bytes: Uint8Array, mime: string): Promise<Extr
         'Dieses PDF enthält keinen extrahierbaren Text. Gescannte PDFs und OCR werden nicht unterstützt.',
       );
     return { text: sections.map((section) => section.text).join('\n'), sections };
-  } catch (error: any) {
+  } catch (caught: unknown) {
+    const error = caught instanceof Error ? caught : new Error('Unknown PDF error');
     if (
       error?.message === 'Zu viele PDF-Seiten.' ||
       error?.message === 'Der Text ist zu lang.' ||

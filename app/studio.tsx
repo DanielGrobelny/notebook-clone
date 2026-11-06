@@ -24,38 +24,46 @@ export function Studio({
 }: {
   notebookId: string | null;
   selected: string[];
-  messages: any[];
+  messages: Array<{
+    id: string;
+    role: string;
+    parts: Array<{ type: string; text?: string }>;
+    metadata?: unknown;
+  }>;
 }) {
   const [items, setItems] = useState<Artifact[]>([]),
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false),
     [open, setOpen] = useState<Artifact | null>(null);
-  const load = useCallback(
-    async (signal?: AbortSignal) => {
-      if (!notebookId) {
-        setItems([]);
-        return;
-      }
-      const r = await apiRequest('/api/notebooks/' + notebookId + '/artifacts', { signal });
-      if (r.ok)
-        setItems(
-          (await r.json()).artifacts.map((x: Artifact) => ({
-            ...x,
-            title:
-              x.kind === 'briefing' && x.title === 'Quellenbriefing' ? 'Zusammenfassung' : x.title,
-          })),
-        );
+  const fetchItems = useCallback(
+    async (signal?: AbortSignal): Promise<Artifact[] | null> => {
+      if (!notebookId) return null;
+      const response = await apiRequest('/api/notebooks/' + notebookId + '/artifacts', { signal });
+      if (!response.ok) throw Error('Laden fehlgeschlagen.');
+      const data = await response.json();
+      return (data.artifacts as Artifact[]).map((x) => ({
+        ...x,
+        title: x.kind === 'briefing' && x.title === 'Quellenbriefing' ? 'Zusammenfassung' : x.title,
+      }));
     },
     [notebookId],
   );
+  const load = async () => {
+    const next = await fetchItems();
+    if (next) setItems(next);
+  };
   useEffect(() => {
     const controller = new AbortController();
-    void load(controller.signal).catch((error: unknown) => {
-      if (!controller.signal.aborted)
-        setError(error instanceof Error ? error.message : 'Laden fehlgeschlagen.');
-    });
+    void fetchItems(controller.signal)
+      .then((next) => {
+        if (!controller.signal.aborted && next) setItems(next);
+      })
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted)
+          setError(error instanceof Error ? error.message : 'Laden fehlgeschlagen.');
+      });
     return () => controller.abort();
-  }, [load]);
+  }, [fetchItems]);
   const briefing = async () => {
     if (!notebookId || busy) return;
     setBusy(true);
@@ -79,9 +87,11 @@ export function Studio({
   };
   const saveAnswer = async () => {
     if (!notebookId || busy) return;
-    const assistant = [...messages].reverse().find((m: any) => m.role === 'assistant');
+    const assistant = [...messages].reverse().find((m) => m.role === 'assistant');
     const content = assistant ? messageText(assistant.parts) : '';
-    const answerId = assistant?.metadata?.assistantMessageId ?? assistant?.id;
+    const answerId =
+      (assistant?.metadata as { assistantMessageId?: string } | undefined)?.assistantMessageId ??
+      assistant?.id;
     if (!content) {
       setError('Noch keine Chatantwort zum Speichern vorhanden.');
       return;

@@ -1,6 +1,7 @@
+import 'server-only';
 import { createHash, randomBytes } from 'node:crypto';
 import { cookies, headers } from 'next/headers';
-import { adminClient } from './supabase/server';
+import { adminClient } from './supabase/admin';
 export const visitorCookieName = 'notebook_visitor';
 const lifetimeMs = 30 * 24 * 60 * 60 * 1000;
 const hash = (token: string) => createHash('sha256').update(token).digest('hex');

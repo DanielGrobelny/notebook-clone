@@ -1,11 +1,7 @@
 import { deflateSync } from 'node:zlib';
 import { expect, test } from './test-fixture';
 
-const credentials = (label: string) => ({
-  email: label + '-' + Date.now() + '-' + Math.random().toString(36).slice(2) + '@example.test',
-  password: 'Notebook-import-test-2026!',
-});
-async function signUp(page: import('@playwright/test').Page, user: ReturnType<typeof credentials>) {
+async function signUp(page: import('@playwright/test').Page) {
   await page.goto('/');
   await page.getByText('Notebooks wechseln', { exact: true }).click();
   await expect(page.getByRole('button', { name: 'Mein Notebook', exact: true })).toBeVisible();
@@ -93,7 +89,7 @@ test('API: Import, PDF-Seite 2, Validierung, Dedup, Löschen und Mandantentrennu
   browser,
   page,
 }) => {
-  await signUp(page, credentials('import-a'));
+  await signUp(page);
   const id = await notebook(page, 'Import ' + Date.now());
   const txt = await postSource(page, id, {
     name: 'note.txt',
@@ -145,7 +141,7 @@ test('API: Import, PDF-Seite 2, Validierung, Dedup, Löschen und Mandantentrennu
   expect(parallel[0].body.source.id).toBe(parallel[1].body.source.id);
   const stranger = await browser.newPage();
   await stranger.addInitScript(() => localStorage.setItem('lumen.welcome.v1', 'seen'));
-  await signUp(stranger, credentials('import-b'));
+  await signUp(stranger);
   expect(
     await stranger.evaluate(
       async ({ id, sourceId }) =>

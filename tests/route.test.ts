@@ -30,7 +30,10 @@ function db({ user = { id: 'u1' }, notebook = { id: valid.notebookId } } = {}) {
     maybeSingle: vi.fn().mockResolvedValue({ data: notebook }),
     single: vi.fn().mockResolvedValue({ data: { id: 'chat-1' }, error: null }),
     insert: vi.fn(() => chain),
-    update: vi.fn((_value?: unknown) => chain),
+    update: vi.fn((value?: unknown) => {
+      void value;
+      return chain;
+    }),
     delete: vi.fn(() => chain),
     limit: vi.fn(() => chain),
   };

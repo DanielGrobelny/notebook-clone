@@ -50,6 +50,10 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "supabase"
-    ]
+    ],
+    "overrides": {
+      "supabase>tar": "7.5.21",
+      "@typescript-eslint/typescript-estree>minimatch": "11.0.1"
+    }
   }
 }

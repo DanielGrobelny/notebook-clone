@@ -16,7 +16,9 @@ test('TXT-Import, Reload und Löschen funktionieren', async ({ page, isMobile })
     mimeType: 'text/plain',
     buffer: Buffer.from('Eigene Quelle für den Importtest.'),
   });
-  await expect(scope.getByText('eigene-notiz.txt')).toBeVisible();
+  await expect(
+    scope.getByRole('button', { name: 'eigene-notiz.txt Bereit · Text', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
   await page.reload();
   if (isMobile) {
     await page.getByRole('button', { name: 'Quellen' }).click();
