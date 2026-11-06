@@ -4,7 +4,7 @@
 
 ## Vor der Aufnahme: einmal wirklich durchspielen
 
-UI-/Codebezug: Production 257f24fa5b56fa723b8a2054f9e6dab0bd358f2e (06.11.2026). Keine Appänderung durch dieses Paket. Umfang aus PROJECT.md: PDF/Text, Quellenwahl, belegter Chat, Persistenz. OCR, Audio, URLimport, Sync und Accounts sind außerhalb des MVP. Fixtures werden manuell importiert, nicht automatisch geseedet.
+UI-/Codebezug: Production 257f24fa5b56fa723b8a2054f9e6dab0bd358f2e (06.11.2026). Die Codebeispiele bleiben auf diesen Stand festgelegt; vor der Aufnahme mit der dann aktuellen App abgleichen. Dieses Paket ändert die App nicht. Umfang aus PROJECT.md: PDF/Text, Quellenwahl, belegter Chat, Persistenz. OCR, Audio, URLimport, Sync und Accounts sind außerhalb des MVP. Fixtures werden manuell importiert, nicht automatisch geseedet.
 
 - Browser mindestens 1280×720, 100 % Zoom. Benachrichtigungen aus, keine privaten Tabs oder Dokumente sichtbar. Nur Aufnahmefenster teilen.
 - Tabs: 1 Deck, 2 Live-App, 3 vorbereitetes Notebook, 4 Zitier-ID-Code, 5 RLS-Code, 6 Mehrturn-Test. Code-Links unten vorab öffnen; privaten GitHubzugriff prüfen.
@@ -18,9 +18,9 @@ UI-/Codebezug: Production 257f24fa5b56fa723b8a2054f9e6dab0bd358f2e (06.11.2026).
 
 ## 0:00–0:45 · Folie 1 · Aufgabe
 
-Klick: Deck, Folie 1. Produktprinzip zeigen, keine Tabelle erklären.
+Klick: Deck, Folie 1. Den Weg von den Dokumenten zur Antwort zeigen.
 
-Sprechvorschlag: „Lumen macht aus eigenen Dokumenten einen Dialog, bei dem ich die Antwort am Original nachprüfen kann. Ich zeige den Weg vom PDF zur Frage und zum Beleg. Im MVP bleiben Quellen und Gespräch erhalten. OCR, Audio und ein Accountsystem sind bewusst nicht Teil dieser Version. Das hier ist das Produktprinzip – die echte Anwendung sehen wir jetzt.“
+Sprechvorschlag: „Lumen macht aus eigenen Dokumenten einen Dialog, bei dem ich die Antwort am Original nachprüfen kann. Ich zeige den Weg vom PDF zur Frage und zum Beleg. Im MVP bleiben Quellen und Gespräch erhalten. OCR, Audio und ein Accountsystem sind bewusst nicht Teil dieser Version. Das zeige ich jetzt in der Anwendung.“
 
 ## 0:45–3:45 · Folie 2 → Tab 2 · echte Demo
 
@@ -52,7 +52,7 @@ Sprechvorschlag: „Wir folgen demselben Weg technisch. PDF und Text werden extr
 
 Klick: [Zitier-ID-Prüfung](https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/lib/retrieval.ts#L46-L49), Zeilen 46–49. Optional [Scoped Retrieval](https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/supabase/migrations/20261105090000_exact_scoped_retrieval.sql#L9-L26), Zeilen 9–26. Codezoom bei Bedarf erhöhen; nicht durch Imports scrollen.
 
-Sprechvorschlag: „Das erste Problem ist eine plausible, aber unbelegte Antwort. Deshalb begrenze ich die Antwort auf den gewählten Quellenraum und verknüpfe sie mit Originalpassagen. Hier werden nur Beleg-IDs akzeptiert, die tatsächlich aus dem aktuellen Retrieval stammen. In der Suche werden Notebook, Besitzer und ausgewählte bereite Quellen zuerst eingeschränkt. Der Trade-off ist begrenzter Kontext statt jedes Mal alle Dokumente zu senden. Eine erlaubte ID beweist noch nicht, dass der Satz inhaltlich richtig ist.“
+Sprechvorschlag: „Das erste Problem ist eine plausible, aber unbelegte Antwort. Deshalb begrenze ich die Antwort auf den gewählten Quellenraum und verknüpfe sie mit Originalpassagen. Hier werden nur Beleg-IDs akzeptiert, die tatsächlich aus dem aktuellen Retrieval stammen. In der Suche werden Notebook, Besitzer und ausgewählte bereite Quellen zuerst eingeschränkt. Die Suche wählt passende Abschnitte aus, statt jedes Mal alle Dokumente zu senden. Dabei kann sie Details übersehen. Eine erlaubte ID beweist noch nicht, dass der Satz inhaltlich richtig ist.“
 
 ## 6:15–7:15 · Folie 5 → Tab 5 · Entscheidung 2
 
@@ -64,7 +64,7 @@ Sprechvorschlag: „Das zweite Problem ist ein einfacher Einstieg ohne gemeinsam
 
 Klick: [Request-Fix](https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/app/api/chat/route.ts#L23-L36), Zeilen 23–36; [Regressionstest](https://github.com/DanielGrobelny/notebook-clone/blob/257f24fa5b56fa723b8a2054f9e6dab0bd358f2e/tests/e2e/followup-chat.spec.ts#L8-L22), Zeilen 8–22. Historie: [PR 24](https://github.com/DanielGrobelny/notebook-clone/pull/24), [PR 25](https://github.com/DanielGrobelny/notebook-clone/pull/25), [PR 26](https://github.com/DanielGrobelny/notebook-clone/pull/26).
 
-Sprechvorschlag: „An einem konkreten Fehler lässt sich der Qualitätsanspruch zeigen. Bei einer Rückfrage enthielt die SDK-History Assistant-Metadaten; die strikte Anfrageprüfung antwortete mit 400. Der Fix verarbeitet den aktuellen Userturn und lädt den Verlauf aus autorisiertem Speicher. Dieser Regressionstest sendet mehrere Fragen, lädt neu und prüft den Requestvertrag. KI-Unterstützung kann Code und Tests vorschlagen; Review muss den tatsächlichen Vertrag und die Fehlerfälle prüfen. Die PRs zeigen solche Korrekturschleifen, nicht eine perfekte Erstimplementierung. Der Test verwendet einen Mock: Er belegt Technik, nicht Modellqualität. Ein aktueller semantischer Qualitätsgate ist noch offen.“
+Sprechvorschlag: „An einem konkreten Fehler lässt sich der Qualitätsanspruch zeigen. Bei einer Rückfrage enthielt die SDK-History Assistant-Metadaten; die strikte Anfrageprüfung antwortete mit 400. Die Korrektur verarbeitet nur die neue Nutzerfrage und lädt den zugehörigen Verlauf vom Server. Dieser Test sendet mehrere Fragen, lädt die Seite neu und prüft das Anfrageformat. KI-Unterstützung kann Code und Tests vorschlagen; Review muss den tatsächlichen Vertrag und die Fehlerfälle prüfen. Die PRs zeigen solche Korrekturschleifen, nicht eine perfekte Erstimplementierung. Der Test verwendet einen Mock: Er belegt Technik, nicht Modellqualität. Eine systematische Prüfung der aktuellen Antworten und Belege steht noch aus.“
 
 Bei Eval-Rückfrage: Historischer v1-Lauf hatte 5/6 Fehlschläge. v2 war unvollständig und nicht vollständig manuell bewertet. Das ist kein gemessener Fehleranteil der heutigen App. Details im Reviewer Guide. Keine neuen Suite-/Providerläufe durch dieses Paket behaupten. Persönliche Erfahrungen nur ergänzen, wenn sie wirklich stattgefunden haben.
 
