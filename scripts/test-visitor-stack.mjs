@@ -76,8 +76,8 @@ function jwt(role) {
 const anon = jwt('anon'),
   service = jwt('service_role');
 try {
-  for (const port of [4385, 4386, 56821, 56823, 56824])
   for (const port of [publicPort, mockPort, 56821, 56823, 56824])
+    await new Promise((resolve, reject) => {
       const probe = net.createServer();
       probe.once('error', () => reject(Error('Required test port occupied: ' + port)));
       probe.listen(port, '127.0.0.1', () => probe.close(resolve));
