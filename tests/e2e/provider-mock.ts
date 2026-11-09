@@ -196,7 +196,7 @@ export default async function globalSetup() {
     server!.listen(mockPort, '127.0.0.1', resolve);
   });
   process.env.OPENAI_API_KEY = 'normal-suite-local-only';
-  process.env.OPENAI_BASE_URL = ''http://127.0.0.1:' + mockPort + '/v1'';
+  process.env.OPENAI_BASE_URL = 'http://127.0.0.1:' + mockPort + '/v1';
   return async () => {
     await new Promise<void>((resolve) => server?.close(() => resolve()));
   };
