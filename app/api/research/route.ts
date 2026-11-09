@@ -8,6 +8,23 @@ export const runtime = 'nodejs';
 export const maxDuration = 60;
 const fail = (message: string, status: number, headers?: HeadersInit) =>
   Response.json({ message }, { status, headers });
+function classifyResearchError(error: unknown, signal: AbortSignal, timeout: AbortSignal) {
+  const providerRateLimited =
+    !!error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 429;
+  if (signal.aborted) {
+    return timeout.aborted
+      ? { message: 'Recherche-Zeitlimit überschritten.', status: 504 }
+      : { message: 'Recherche abgebrochen.', status: 499 };
+  }
+  if (providerRateLimited) {
+    return {
+      message: 'Suchanbieter ausgelastet. Bitte später erneut versuchen.',
+      status: 429,
+      headers: { 'Retry-After': '60' },
+    };
+  }
+  return { message: 'Recherche fehlgeschlagen. Bitte erneut versuchen.', status: 502 };
+}
 export async function POST(request: Request) {
   if (Number(request.headers.get('content-length')) > 12000) return fail('Anfrage zu groß.', 413);
   let body;
@@ -24,11 +41,11 @@ export async function POST(request: Request) {
   const timeout = AbortSignal.timeout(45000),
     signal = AbortSignal.any([request.signal, timeout]);
   if (signal.aborted) return fail('Recherche abgebrochen.', 499);
-  const db = await createClient();
-  if (!db.visitor) return fail('Besuchersitzung nicht verfügbar.', 401);
+  const database = await createClient();
+  if (!database.visitor) return fail('Besuchersitzung nicht verfügbar.', 401);
   const config = getModelConfiguration();
   if (!config.configured) return fail('Recherche nicht konfiguriert.', 503);
-  const quota = await claimVisitorProviderCall(db);
+  const quota = await claimVisitorProviderCall(database);
   if (!quota.allowed)
     return fail(
       quota.unavailable
@@ -62,18 +79,7 @@ export async function POST(request: Request) {
       { headers: { 'Cache-Control': 'no-store' } },
     );
   } catch (error) {
-    const rate =
-      !!error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 429;
-    return fail(
-      signal.aborted
-        ? timeout.aborted
-          ? 'Recherche-Zeitlimit überschritten.'
-          : 'Recherche abgebrochen.'
-        : rate
-          ? 'Suchanbieter ausgelastet. Bitte später erneut versuchen.'
-          : 'Recherche fehlgeschlagen. Bitte erneut versuchen.',
-      signal.aborted ? (timeout.aborted ? 504 : 499) : rate ? 429 : 502,
-      rate ? { 'Retry-After': '60' } : undefined,
-    );
+    const failure = classifyResearchError(error, signal, timeout);
+    return fail(failure.message, failure.status, failure.headers);
   }
 }
