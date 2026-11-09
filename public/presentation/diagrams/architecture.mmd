@@ -1,0 +1,6 @@
+flowchart LR
+ B[Browser] --> A[Next.js API]
+ A --> D[Postgres RLS pgvector]
+ A --> S[Private Storage]
+ A --> O[OpenAI]
+ A --> V[Session hash table: service role only]

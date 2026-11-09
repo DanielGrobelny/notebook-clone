@@ -1,0 +1,17 @@
+SYNTHETISCHES DEMODOKUMENT - keine realen Kundendaten
+AURORA | Projektbriefing | Version 1 | 02.11.2026
+
+1. Ziel und Umfang
+Ein Haendler erprobt einen internen Wissensassistenten im Kundenservice.
+Der Pilot umfasst zwoelf Mitarbeitende und freigegebene Produktinformationen.
+Es werden keine personenbezogenen Kundendaten verwendet.
+
+2. Termin und Budget
+Der urspruenglich geplante Pilotstart ist der 16. November 2026.
+Das freigegebene Pilotbudget betraegt 18.000 Euro.
+Eine Jahresfinanzierung ist nicht beschlossen.
+
+3. Verantwortung und Freigabe
+Projektverantwortliche ist Mira Sommer.
+Voraussetzung ist die Freigabe der Testdokumente durch das Fachteam.
+Der Pilot laeuft vier Wochen.
