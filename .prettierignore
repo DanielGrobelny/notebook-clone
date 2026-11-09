@@ -1,0 +1,10 @@
+pnpm-lock.yaml
+.next
+node_modules
+coverage
+test-results
+playwright-report
+.vercel
+evals
+
+next-env.d.ts

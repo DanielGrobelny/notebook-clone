@@ -1,11 +1,169 @@
-import {expect,test,type Locator,type Page} from './test-fixture';
-import {setupRealSource} from './real-source';
-async function studio(page:Page,mobile:boolean){if(mobile){await page.getByRole('button',{name:'Ergebnisse',exact:true}).click();return page.getByRole('dialog',{name:'Ergebnisse'});}return page;}
-async function closeStudio(page:Page,mobile:boolean){if(mobile)await page.getByRole('button',{name:'Ergebnisse schließen',exact:true}).click();}
-function artifact(scope:Locator|Page,title:string):Locator{return scope.getByRole('article',{name:new RegExp('^'+title+' ')}).first();}
-async function api<T>(page:Page,path:string,init?:{method?:string;headers?:Record<string,string>;body?:string}):Promise<{status:number;body:T}>{return page.evaluate(async({path,init})=>{const r=await fetch(path,init);return {status:r.status,body:await r.json().catch(()=>null)};},{path,init});}
-async function selectedSource(page:Page){const r=await api<any>(page,'/api/notebooks');const notebook=r.body.notebooks[0];const s=await api<any>(page,'/api/notebooks/'+notebook.id+'/sources');return {notebookId:notebook.id,sourceId:s.body.sources[0].id};}
-test('Studio: Chatantwort per echter App-API als Notiz speichern, öffnen, Reload und löschen',async({page,isMobile})=>{await setupRealSource(page,isMobile,'studio-note');await studio(page,isMobile);await closeStudio(page,isMobile);await page.getByLabel('Frage an deine Quellen').fill('Was steht in der Quelle?');await page.getByRole('button',{name:'Frage senden'}).click();await expect(page.getByText('Lokale Chatantwort mit Beleg')).toBeVisible();const scope=await studio(page,isMobile);await scope.getByRole('button',{name:'Chatantwort speichern'}).click();const note=artifact(scope,'Chatantwort als Notiz');await expect(note).toBeVisible();const openButton=note.getByRole('button',{name:/^Chatantwort als Notiz öffnen /});await openButton.hover();await page.keyboard.press('Tab');await openButton.focus();await expect(openButton).toBeFocused();expect(await openButton.evaluate(e=>getComputedStyle(e).outlineStyle)).not.toBe('none');if(process.env.UX_SCREENSHOT_DIR)await page.screenshot({path:process.env.UX_SCREENSHOT_DIR+'/results-'+(isMobile?'mobile':'desktop')+'.png',fullPage:true});await openButton.press('Enter');await expect(page.getByRole('dialog',{name:'Gespeichertes Ergebnis'}).getByText('Lokale Chatantwort mit Beleg')).toBeVisible();await page.getByRole('dialog',{name:'Gespeichertes Ergebnis'}).getByRole('button',{name:'Ergebnis schließen'}).click();await page.reload();const reloaded=await studio(page,isMobile);const reloadedNote=artifact(reloaded,'Chatantwort als Notiz');await expect(reloadedNote).toBeVisible();page.once('dialog',d=>d.accept());await reloadedNote.getByRole('button',{name:/^Chatantwort als Notiz löschen /}).click();await expect(reloaded.getByText('Noch keine Ergebnisse.')).toBeVisible();});
-test('Studio: Briefing aus ausgewählter Quelle zeigt Bezug, bleibt nach Reload und wird nach Quellenlöschung veraltet',async({page,isMobile})=>{await setupRealSource(page,isMobile,'studio-briefing');const scope=await studio(page,isMobile);await scope.getByRole('button',{name:'Zusammenfassung erstellen'}).click();const card=artifact(scope,'Zusammenfassung');await expect(card.getByRole('button',{name:/^Zusammenfassung öffnen /})).toBeVisible();await expect(card.getByText('Zusammenfassung · 1 Quellen')).toBeVisible();const ids=await selectedSource(page);await page.reload();const again=await studio(page,isMobile);await expect(artifact(again,'Zusammenfassung').getByRole('button',{name:/^Zusammenfassung öffnen /})).toBeVisible();expect((await api<any>(page,'/api/notebooks/'+ids.notebookId+'/sources/'+ids.sourceId,{method:'DELETE'})).status).toBe(204);await page.reload();const stale=await studio(page,isMobile);await expect(artifact(stale,'Zusammenfassung').getByText('Veraltet: Quelle entfernt')).toBeVisible();});
-test('Studio: lokaler Providerfehler beim Briefing zeigt Retry, der zweite echte API-Lauf gelingt',async({page,isMobile})=>{await setupRealSource(page,isMobile,'PROVIDER_FAIL_ONCE-'+(isMobile?'mobile':'desktop'));const scope=await studio(page,isMobile);await scope.getByRole('button',{name:'Zusammenfassung erstellen'}).click();await expect(scope.getByRole('alert').filter({hasText:'Zusammenfassung konnte derzeit nicht erstellt werden'})).toContainText('Zusammenfassung konnte derzeit nicht erstellt werden');await scope.getByRole('button',{name:'Zusammenfassung erstellen'}).click();await expect(artifact(scope,'Zusammenfassung').getByRole('button',{name:/^Zusammenfassung öffnen /})).toBeVisible();});
-test('Studio API: fremde Nutzer dürfen lebende Artefakte nicht lesen oder löschen und keine Notiz über fremde Message-ID speichern',async({browser,page,isMobile})=>{await setupRealSource(page,isMobile,'studio-owner');const ids=await selectedSource(page);const created=await api<any>(page,'/api/notebooks/'+ids.notebookId+'/briefing',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({sourceIds:[ids.sourceId]})});expect(created.status).toBe(201);const stranger=await browser.newPage();await stranger.goto('/');await stranger.getByRole('button',{name:'Erst einmal umsehen'}).click();await stranger.getByText('Notebooks wechseln',{exact:true}).click();await expect(stranger.getByRole('button',{name:'Mein Notebook',exact:true})).toBeVisible();expect((await api<any>(stranger,'/api/notebooks/'+ids.notebookId+'/artifacts')).status).toBe(404);expect((await api<any>(stranger,'/api/notebooks/'+ids.notebookId+'/artifacts/'+created.body.artifact.id,{method:'DELETE'})).status).toBe(404);expect((await api<any>(stranger,'/api/notebooks/'+ids.notebookId+'/artifacts',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({title:'Fremd',content:'Nein',answerId:'11111111-1111-4111-8111-111111111111'})})).status).toBe(404);await stranger.close();});
+import { expect, test, type Locator, type Page } from './test-fixture';
+import { setupRealSource } from './real-source';
+async function studio(page: Page, mobile: boolean) {
+  if (mobile) {
+    await page.getByRole('button', { name: 'Ergebnisse', exact: true }).click();
+    return page.getByRole('dialog', { name: 'Ergebnisse' });
+  }
+  return page;
+}
+async function closeStudio(page: Page, mobile: boolean) {
+  if (mobile) await page.getByRole('button', { name: 'Ergebnisse schließen', exact: true }).click();
+}
+function artifact(scope: Locator | Page, title: string): Locator {
+  return scope.getByRole('article', { name: new RegExp('^' + title + ' ') }).first();
+}
+async function api<T>(
+  page: Page,
+  path: string,
+  init?: { method?: string; headers?: Record<string, string>; body?: string },
+): Promise<{ status: number; body: T }> {
+  return page.evaluate(
+    async ({ path, init }) => {
+      const r = await fetch(path, init);
+      return { status: r.status, body: await r.json().catch(() => null) };
+    },
+    { path, init },
+  );
+}
+async function selectedSource(page: Page) {
+  const r = await api<any>(page, '/api/notebooks');
+  const notebook = r.body.notebooks[0];
+  const s = await api<any>(page, '/api/notebooks/' + notebook.id + '/sources');
+  return { notebookId: notebook.id, sourceId: s.body.sources[0].id };
+}
+test('Studio: Chatantwort per echter App-API als Notiz speichern, öffnen, Reload und löschen', async ({
+  page,
+  isMobile,
+}) => {
+  await setupRealSource(page, isMobile, 'studio-note');
+  await studio(page, isMobile);
+  await closeStudio(page, isMobile);
+  await page.getByLabel('Frage an deine Quellen').fill('Was steht in der Quelle?');
+  await page.getByRole('button', { name: 'Frage senden' }).click();
+  await expect(page.getByText('Lokale Chatantwort mit Beleg')).toBeVisible();
+  const scope = await studio(page, isMobile);
+  await scope.getByRole('button', { name: 'Chatantwort speichern' }).click();
+  const note = artifact(scope, 'Chatantwort als Notiz');
+  await expect(note).toBeVisible();
+  const openButton = note.getByRole('button', { name: /^Chatantwort als Notiz öffnen / });
+  await openButton.hover();
+  await page.keyboard.press('Tab');
+  await openButton.focus();
+  await expect(openButton).toBeFocused();
+  expect(await openButton.evaluate((e) => getComputedStyle(e).outlineStyle)).not.toBe('none');
+  if (process.env.UX_SCREENSHOT_DIR)
+    await page.screenshot({
+      path:
+        process.env.UX_SCREENSHOT_DIR + '/results-' + (isMobile ? 'mobile' : 'desktop') + '.png',
+      fullPage: true,
+    });
+  await openButton.press('Enter');
+  await expect(
+    page
+      .getByRole('dialog', { name: 'Gespeichertes Ergebnis' })
+      .getByText('Lokale Chatantwort mit Beleg'),
+  ).toBeVisible();
+  await page
+    .getByRole('dialog', { name: 'Gespeichertes Ergebnis' })
+    .getByRole('button', { name: 'Ergebnis schließen' })
+    .click();
+  await page.reload();
+  const reloaded = await studio(page, isMobile);
+  const reloadedNote = artifact(reloaded, 'Chatantwort als Notiz');
+  await expect(reloadedNote).toBeVisible();
+  page.once('dialog', (d) => d.accept());
+  await reloadedNote.getByRole('button', { name: /^Chatantwort als Notiz löschen / }).click();
+  await expect(reloaded.getByText('Noch keine Ergebnisse.')).toBeVisible();
+});
+test('Studio: Briefing aus ausgewählter Quelle zeigt Bezug, bleibt nach Reload und wird nach Quellenlöschung veraltet', async ({
+  page,
+  isMobile,
+}) => {
+  await setupRealSource(page, isMobile, 'studio-briefing');
+  const scope = await studio(page, isMobile);
+  await scope.getByRole('button', { name: 'Zusammenfassung erstellen' }).click();
+  const card = artifact(scope, 'Zusammenfassung');
+  await expect(card.getByRole('button', { name: /^Zusammenfassung öffnen / })).toBeVisible();
+  await expect(card.getByText('Zusammenfassung · 1 Quellen')).toBeVisible();
+  const ids = await selectedSource(page);
+  await page.reload();
+  const again = await studio(page, isMobile);
+  await expect(
+    artifact(again, 'Zusammenfassung').getByRole('button', { name: /^Zusammenfassung öffnen / }),
+  ).toBeVisible();
+  expect(
+    (
+      await api<any>(page, '/api/notebooks/' + ids.notebookId + '/sources/' + ids.sourceId, {
+        method: 'DELETE',
+      })
+    ).status,
+  ).toBe(204);
+  await page.reload();
+  const stale = await studio(page, isMobile);
+  await expect(
+    artifact(stale, 'Zusammenfassung').getByText('Veraltet: Quelle entfernt'),
+  ).toBeVisible();
+});
+test('Studio: lokaler Providerfehler beim Briefing zeigt Retry, der zweite echte API-Lauf gelingt', async ({
+  page,
+  isMobile,
+}) => {
+  await setupRealSource(page, isMobile, 'PROVIDER_FAIL_ONCE-' + (isMobile ? 'mobile' : 'desktop'));
+  const scope = await studio(page, isMobile);
+  await scope.getByRole('button', { name: 'Zusammenfassung erstellen' }).click();
+  await expect(
+    scope
+      .getByRole('alert')
+      .filter({ hasText: 'Zusammenfassung konnte derzeit nicht erstellt werden' }),
+  ).toContainText('Zusammenfassung konnte derzeit nicht erstellt werden');
+  await scope.getByRole('button', { name: 'Zusammenfassung erstellen' }).click();
+  await expect(
+    artifact(scope, 'Zusammenfassung').getByRole('button', { name: /^Zusammenfassung öffnen / }),
+  ).toBeVisible();
+});
+test('Studio API: fremde Nutzer dürfen lebende Artefakte nicht lesen oder löschen und keine Notiz über fremde Message-ID speichern', async ({
+  browser,
+  page,
+  isMobile,
+}) => {
+  await setupRealSource(page, isMobile, 'studio-owner');
+  const ids = await selectedSource(page);
+  const created = await api<any>(page, '/api/notebooks/' + ids.notebookId + '/briefing', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ sourceIds: [ids.sourceId] }),
+  });
+  expect(created.status).toBe(201);
+  const stranger = await browser.newPage();
+  await stranger.goto('/');
+  await stranger.getByRole('button', { name: 'Erst einmal umsehen' }).click();
+  await stranger.getByText('Notebooks wechseln', { exact: true }).click();
+  await expect(stranger.getByRole('button', { name: 'Mein Notebook', exact: true })).toBeVisible();
+  expect((await api<any>(stranger, '/api/notebooks/' + ids.notebookId + '/artifacts')).status).toBe(
+    404,
+  );
+  expect(
+    (
+      await api<any>(
+        stranger,
+        '/api/notebooks/' + ids.notebookId + '/artifacts/' + created.body.artifact.id,
+        { method: 'DELETE' },
+      )
+    ).status,
+  ).toBe(404);
+  expect(
+    (
+      await api<any>(stranger, '/api/notebooks/' + ids.notebookId + '/artifacts', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          title: 'Fremd',
+          content: 'Nein',
+          answerId: '11111111-1111-4111-8111-111111111111',
+        }),
+      })
+    ).status,
+  ).toBe(404);
+  await stranger.close();
+});

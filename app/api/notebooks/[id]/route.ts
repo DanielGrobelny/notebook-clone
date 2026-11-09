@@ -1,4 +1,64 @@
-import { NextResponse } from 'next/server'; import { z } from 'zod'; import { visitorContext } from '../../../../lib/visitor-owner';
-const id=z.string().uuid(),title=z.string().trim().min(1).max(160);
-export async function PATCH(request:Request,{params}:{params:Promise<{id:string}>}){const parsedId=id.safeParse((await params).id);const parsed=title.safeParse((await request.json().catch(()=>null))?.title);if(!parsedId.success||!parsed.success)return NextResponse.json({error:'invalid_request'},{status:400});try{const {db,visitorId}=await visitorContext();const {data,error}=await db.from('notebooks').update({title:parsed.data}).eq('id',parsedId.data).eq('visitor_id',visitorId).select('id,title,created_at,updated_at').maybeSingle();return error?NextResponse.json({error:'update_failed'},{status:500}):!data?NextResponse.json({error:'not_found'},{status:404}):NextResponse.json({notebook:data});}catch{return NextResponse.json({error:'session_unavailable'},{status:503});}}
-export async function DELETE(_:Request,{params}:{params:Promise<{id:string}>}){const parsed=id.safeParse((await params).id);if(!parsed.success)return NextResponse.json({error:'invalid_id'},{status:400});try{const {db,visitorId}=await visitorContext();const {data:owned}=await db.from('notebooks').select('id').eq('id',parsed.data).eq('visitor_id',visitorId).maybeSingle();if(!owned)return NextResponse.json({error:'not_found'},{status:404});const {data:sources,error:sourceError}=await db.from('sources').select('storage_path').eq('notebook_id',parsed.data);if(sourceError)return NextResponse.json({error:'query_failed'},{status:500});const paths=(sources??[]).map(s=>s.storage_path).filter(Boolean);if(paths.length){const {error}=await db.storage.from('source-files').remove(paths);if(error)return NextResponse.json({error:'storage_delete_failed'},{status:502});}const {error,count}=await db.from('notebooks').delete({count:'exact'}).eq('id',parsed.data).eq('visitor_id',visitorId);return error?NextResponse.json({error:'delete_failed'},{status:500}):count===0?NextResponse.json({error:'not_found'},{status:404}):new NextResponse(null,{status:204});}catch{return NextResponse.json({error:'session_unavailable'},{status:503});}}
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { visitorContext } from '../../../../lib/visitor-owner';
+const id = z.string().uuid(),
+  title = z.string().trim().min(1).max(160);
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const parsedId = id.safeParse((await params).id);
+  const parsed = title.safeParse((await request.json().catch(() => null))?.title);
+  if (!parsedId.success || !parsed.success)
+    return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
+  try {
+    const { db, visitorId } = await visitorContext();
+    const { data, error } = await db
+      .from('notebooks')
+      .update({ title: parsed.data })
+      .eq('id', parsedId.data)
+      .eq('visitor_id', visitorId)
+      .select('id,title,created_at,updated_at')
+      .maybeSingle();
+    return error
+      ? NextResponse.json({ error: 'update_failed' }, { status: 500 })
+      : !data
+        ? NextResponse.json({ error: 'not_found' }, { status: 404 })
+        : NextResponse.json({ notebook: data });
+  } catch {
+    return NextResponse.json({ error: 'session_unavailable' }, { status: 503 });
+  }
+}
+export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
+  const parsed = id.safeParse((await params).id);
+  if (!parsed.success) return NextResponse.json({ error: 'invalid_id' }, { status: 400 });
+  try {
+    const { db, visitorId } = await visitorContext();
+    const { data: owned } = await db
+      .from('notebooks')
+      .select('id')
+      .eq('id', parsed.data)
+      .eq('visitor_id', visitorId)
+      .maybeSingle();
+    if (!owned) return NextResponse.json({ error: 'not_found' }, { status: 404 });
+    const { data: sources, error: sourceError } = await db
+      .from('sources')
+      .select('storage_path')
+      .eq('notebook_id', parsed.data);
+    if (sourceError) return NextResponse.json({ error: 'query_failed' }, { status: 500 });
+    const paths = (sources ?? []).map((s) => s.storage_path).filter(Boolean);
+    if (paths.length) {
+      const { error } = await db.storage.from('source-files').remove(paths);
+      if (error) return NextResponse.json({ error: 'storage_delete_failed' }, { status: 502 });
+    }
+    const { error, count } = await db
+      .from('notebooks')
+      .delete({ count: 'exact' })
+      .eq('id', parsed.data)
+      .eq('visitor_id', visitorId);
+    return error
+      ? NextResponse.json({ error: 'delete_failed' }, { status: 500 })
+      : count === 0
+        ? NextResponse.json({ error: 'not_found' }, { status: 404 })
+        : new NextResponse(null, { status: 204 });
+  } catch {
+    return NextResponse.json({ error: 'session_unavailable' }, { status: 503 });
+  }
+}

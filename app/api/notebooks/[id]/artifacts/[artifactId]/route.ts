@@ -1,2 +1,25 @@
-import {NextResponse} from 'next/server'; import {z} from 'zod'; import {createClient} from '../../../../../../lib/supabase/server'; const uuid=z.string().uuid();
-export async function DELETE(_:Request,{params}:{params:Promise<{id:string;artifactId:string}>}){const p=await params;if(!uuid.safeParse(p.id).success||!uuid.safeParse(p.artifactId).success)return NextResponse.json({error:'invalid_id'},{status:400});const db=await createClient();const user=db.visitor;if(!user)return NextResponse.json({error:'unauthorized'},{status:401});const {data:n}=await db.from('notebooks').select('id').eq('id',p.id).maybeSingle();if(!n)return NextResponse.json({error:'not_found'},{status:404});const {error}=await db.from('artifacts').delete().eq('id',p.artifactId).eq('notebook_id',p.id);return error?NextResponse.json({error:'delete_failed'},{status:500}):new NextResponse(null,{status:204});}
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { createClient } from '../../../../../../lib/supabase/server';
+const uuid = z.string().uuid();
+export async function DELETE(
+  _: Request,
+  { params }: { params: Promise<{ id: string; artifactId: string }> },
+) {
+  const p = await params;
+  if (!uuid.safeParse(p.id).success || !uuid.safeParse(p.artifactId).success)
+    return NextResponse.json({ error: 'invalid_id' }, { status: 400 });
+  const db = await createClient();
+  const user = db.visitor;
+  if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  const { data: n } = await db.from('notebooks').select('id').eq('id', p.id).maybeSingle();
+  if (!n) return NextResponse.json({ error: 'not_found' }, { status: 404 });
+  const { error } = await db
+    .from('artifacts')
+    .delete()
+    .eq('id', p.artifactId)
+    .eq('notebook_id', p.id);
+  return error
+    ? NextResponse.json({ error: 'delete_failed' }, { status: 500 })
+    : new NextResponse(null, { status: 204 });
+}

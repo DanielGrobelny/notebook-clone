@@ -7,25 +7,60 @@ import { DELETE } from '../app/api/notebooks/[id]/sources/[sourceId]/route';
 const notebookId = '11111111-1111-4111-8111-111111111111';
 const sourceId = '22222222-2222-4222-8222-222222222222';
 
-type State = { storageError: unknown; deleteError: unknown; deleteCalls: number; storageCalls: number };
+type State = {
+  storageError: unknown;
+  deleteError: unknown;
+  deleteCalls: number;
+  storageCalls: number;
+};
 function client(state: State) {
   return {
-    visitor:{id:'test-visitor'},auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }) },
-    storage: { from: vi.fn(() => ({ remove: vi.fn(async () => { state.storageCalls++; return { error: state.storageError }; }) })) },
+    visitor: { id: 'test-visitor' },
+    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'user-1' } } }) },
+    storage: {
+      from: vi.fn(() => ({
+        remove: vi.fn(async () => {
+          state.storageCalls++;
+          return { error: state.storageError };
+        }),
+      })),
+    },
     from: vi.fn((table: string) => {
       if (table !== 'sources') throw new Error('unexpected table ' + table);
       return {
-        select: vi.fn(() => ({ eq: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue({ data: { id: sourceId, storage_path: 'user-1/path.txt' } }) })) })) })),
-        delete: vi.fn(() => ({ eq: vi.fn(() => ({ eq: vi.fn(async () => { state.deleteCalls++; return { error: state.deleteError }; }) })) })),
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              maybeSingle: vi
+                .fn()
+                .mockResolvedValue({ data: { id: sourceId, storage_path: 'user-1/path.txt' } }),
+            })),
+          })),
+        })),
+        delete: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            eq: vi.fn(async () => {
+              state.deleteCalls++;
+              return { error: state.deleteError };
+            }),
+          })),
+        })),
       };
     }),
   };
 }
-async function remove() { return DELETE(new Request('http://test.invalid'), { params: Promise.resolve({ id: notebookId, sourceId }) }); }
+async function remove() {
+  return DELETE(new Request('http://test.invalid'), {
+    params: Promise.resolve({ id: notebookId, sourceId }),
+  });
+}
 
 describe('DELETE Quellenroute', () => {
   let state: State;
-  beforeEach(() => { state = { storageError: null, deleteError: null, deleteCalls: 0, storageCalls: 0 }; mocked.createClient.mockResolvedValue(client(state)); });
+  beforeEach(() => {
+    state = { storageError: null, deleteError: null, deleteCalls: 0, storageCalls: 0 };
+    mocked.createClient.mockResolvedValue(client(state));
+  });
 
   it('bricht bei Storage-Fehler mit 502 ab und lässt den Datenbank-Löschversuch für einen erfolgreichen Retry aus', async () => {
     state.storageError = { statusCode: 500 };
