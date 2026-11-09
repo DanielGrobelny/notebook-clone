@@ -185,7 +185,7 @@ try {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: anon,
     SUPABASE_SERVICE_ROLE_KEY: service,
     OPENAI_API_KEY: 'local-test-only',
-    OPENAI_BASE_URL: 'http://127.0.0.1:4386/v1',
+    OPENAI_BASE_URL: 'http://127.0.0.1:' + mockPort + '/v1',
     VISITOR_TEST_DB: '1',
     VISITOR_TEST_PORT: String(publicPort),
     VISITOR_MOCK_PORT: String(mockPort),
