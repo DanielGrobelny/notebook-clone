@@ -10,6 +10,8 @@ const exec = promisify(execCallback);
 const directory = await mkdtemp(join(tmpdir(), 'visitor-tests-'));
 const prefix = 'visitor-tests-' + process.pid;
 const containers = [];
+const publicPort = Number(process.env.VISITOR_TEST_PORT ?? '4385');
+const mockPort = Number(process.env.VISITOR_MOCK_PORT ?? '4386');
 let gateway;
 let networkCreated = false;
 const run = async (command, args, options = {}) => {
@@ -185,6 +187,8 @@ try {
     OPENAI_API_KEY: 'local-test-only',
     OPENAI_BASE_URL: 'http://127.0.0.1:4386/v1',
     VISITOR_TEST_DB: '1',
+    VISITOR_TEST_PORT: String(publicPort),
+    VISITOR_MOCK_PORT: String(mockPort),
   };
   delete env.RUN_OPENAI_INTEGRATION;
   delete env.RUN_INTEGRATION;

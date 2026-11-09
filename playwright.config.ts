@@ -1,4 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
+const publicPort = process.env.VISITOR_TEST_PORT ?? '4385';
+const mockPort = process.env.VISITOR_MOCK_PORT ?? '4386';
 
 const requiredPublicEnv = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY'] as const;
 const supabaseEnv = Object.fromEntries(
@@ -18,14 +20,14 @@ export default defineConfig({
   fullyParallel: true,
   reporter: [['list']],
   use: {
-    baseURL: 'http://127.0.0.1:4385',
+    baseURL: 'http://127.0.0.1:' + publicPort,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
   // A freshly built, dedicated server prevents a different checkout on 4385 from being reused.
   webServer: {
-    command: 'pnpm start --hostname 127.0.0.1 -p 4385',
-    url: 'http://127.0.0.1:4385',
+    command: 'pnpm start --hostname 127.0.0.1 -p ' + publicPort,
+    url: 'http://127.0.0.1:' + publicPort,
     reuseExistingServer: false,
     timeout: 120000,
     env: {
@@ -34,7 +36,7 @@ export default defineConfig({
         ? {}
         : {
             OPENAI_API_KEY: 'normal-suite-local-only',
-            OPENAI_BASE_URL: 'http://127.0.0.1:4386/v1',
+            OPENAI_BASE_URL: 'http://127.0.0.1:' + mockPort + '/v1',
           }),
     },
   },
