@@ -1,12 +1,22 @@
 'use client';
-import { Sources, SourcePanel } from './sources';
-import { Studio } from './studio';
+import { Research } from './research';
 import { AnswerText } from './answer-text';
 import { useMemo, useState, FormEvent, useEffect, useLayoutEffect, useRef } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { currentUserMessages } from './chat-contract';
 import { DefaultChatTransport } from 'ai';
-import { BookOpen, Send, Sparkles, Square, X } from 'lucide-react';
+import {
+  BookOpen,
+  Check,
+  FileText,
+  Send,
+  Sparkles,
+  Square,
+  X,
+  Upload,
+  Trash2,
+  Eye,
+} from 'lucide-react';
 import { canSubmit, toggleSource } from './notebook';
 import { Persistence } from './persistence';
 import { Welcome } from './welcome';
@@ -27,6 +37,455 @@ function chatErrorMessage(message: string) {
   return message || 'Die Anfrage konnte nicht verarbeitet werden. Bitte erneut versuchen.';
 }
 type Panel = 'sources' | 'studio' | null;
+function Sources({
+  selected,
+  onToggle,
+  onRemove,
+  onSelect,
+  notebookId,
+}: {
+  selected: string[];
+  onToggle: (id: string) => void;
+  onRemove: (id: string) => void;
+  onSelect: (id: string) => void;
+  notebookId: string | null;
+}) {
+  const [items, setItems] = useState<RealSource[]>([]);
+  const [error, setError] = useState('');
+  const [uploadStatus, setUploadStatus] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const pending = useRef(false);
+  const [retryRequest, setRetryRequest] = useState<{ file?: File; text?: string } | null>(null);
+  const [viewer, setViewer] = useState<{
+    title: string;
+    chunks: Array<{ id: string; content: string; metadata: { page?: number; section?: string } }>;
+  } | null>(null);
+  const input = useRef<HTMLInputElement>(null);
+  const load = async () => {
+    if (!notebookId) {
+      setItems([]);
+      return;
+    }
+    const r = await fetch('/api/notebooks/' + notebookId + '/sources');
+    if (r.ok) setItems((await r.json()).sources);
+  };
+  useEffect(() => {
+    void load();
+  }, [notebookId]);
+  const upload = async (file?: File, text?: string) => {
+    if (pending.current || (!file && text === undefined)) return;
+    if (!notebookId) {
+      setError('Bitte zuerst ein Notebook anlegen.');
+      return;
+    }
+    pending.current = true;
+    setUploading(true);
+    window.dispatchEvent(new CustomEvent('source-processing', { detail: true }));
+    setError('');
+    setRetryRequest({ file, text });
+    const name = file?.name ?? 'Eingefügter Text';
+    setUploadStatus(name + ' · Wird hochgeladen und verarbeitet …');
+    try {
+      const form = new FormData();
+      if (file) form.set('file', file);
+      if (text !== undefined) form.set('text', text);
+      const r = await fetch('/api/notebooks/' + notebookId + '/sources', {
+        method: 'POST',
+        body: form,
+      });
+      const result = await r.json();
+      if (!r.ok) throw Error(result.message ?? 'Import fehlgeschlagen.');
+      await load();
+      if (result.source?.status === 'ready') onSelect(result.source.id);
+      setUploadStatus(
+        name +
+          (result.duplicate ? ' · Bereits vorhanden und ausgewählt.' : ' · Bereit und ausgewählt.'),
+      );
+      setRetryRequest(null);
+    } catch (e) {
+      setUploadStatus('');
+      setError(name + ' · ' + (e instanceof Error ? e.message : 'Import fehlgeschlagen.'));
+    } finally {
+      pending.current = false;
+      setUploading(false);
+      window.dispatchEvent(new CustomEvent('source-processing', { detail: false }));
+    }
+  };
+  const paste = () => {
+    const text = window.prompt('Text einfügen');
+    if (text !== null) void upload(undefined, text);
+  };
+  const show = async (item: RealSource) => {
+    if (!notebookId) return;
+    const r = await fetch('/api/notebooks/' + notebookId + '/sources/' + item.id);
+    if (r.ok) {
+      const x = await r.json();
+      setViewer({ title: x.source.title, chunks: x.chunks });
+    }
+  };
+  const remove = async (item: RealSource) => {
+    if (!notebookId || !window.confirm('Quelle löschen?')) return;
+    const r = await fetch('/api/notebooks/' + notebookId + '/sources/' + item.id, {
+      method: 'DELETE',
+    });
+    if (r.ok) {
+      onRemove(item.id);
+      await load();
+    } else setError('Löschen fehlgeschlagen.');
+  };
+  if (!notebookId)
+    return (
+      <div className="initialization-card" role="status" aria-live="polite">
+        <span className="status-spinner" />
+        <strong>Arbeitsbereich wird eingerichtet</strong>
+        <p>Deine Quellen stehen gleich bereit.</p>
+      </div>
+    );
+  return (
+    <div className="source-list" aria-label="Quellen">
+      <input
+        ref={input}
+        className="sr-only"
+        type="file"
+        disabled={uploading}
+        accept=".txt,.md,.markdown,.pdf,text/plain,text/markdown,application/pdf"
+        onChange={(e) => {
+          void upload(e.target.files?.[0]);
+          e.currentTarget.value = '';
+        }}
+      />
+      <div className="source-actions">
+        <button type="button" disabled={uploading} onClick={() => input.current?.click()}>
+          <Upload size={14} /> Datei
+        </button>
+        <button type="button" disabled={uploading} onClick={paste}>
+          Text einfügen
+        </button>
+      </div>
+      <p className="upload-status" role="status" aria-live="polite" aria-atomic="true">
+        {uploadStatus}
+      </p>
+      {items.map((item) => {
+        const on = selected.includes(item.id);
+        return (
+          <div className={'source ' + (on ? 'active' : '')} key={item.id}>
+            <button
+              type="button"
+              className="source-main"
+              disabled={item.status !== 'ready'}
+              aria-pressed={on}
+              onClick={() => onToggle(item.id)}
+            >
+              <span className="doc-icon violet">
+                <FileText size={17} />
+              </span>
+              <span className="source-copy">
+                <strong>{item.title}</strong>
+                <small>
+                  {item.status === 'ready'
+                    ? 'Bereit'
+                    : item.status === 'error'
+                      ? 'Neu importieren erforderlich'
+                      : item.status}{' '}
+                  · {item.page_count ? item.page_count + ' Seiten' : 'Text'}
+                </small>
+              </span>
+              {on && <Check className="check" size={17} />}
+            </button>
+            <button
+              aria-label={item.title + ' anzeigen'}
+              className="source-tool"
+              onClick={() => void show(item)}
+            >
+              <Eye size={14} />
+            </button>
+            <button
+              aria-label={item.title + ' löschen'}
+              className="source-tool"
+              onClick={() => void remove(item)}
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        );
+      })}
+      {!items.length && (
+        <p className="source-empty">Lade mindestens eine Quelle hoch, um Fragen zu stellen.</p>
+      )}
+      {error && (
+        <p className="source-error" role="alert">
+          {error}
+          {retryRequest && (
+            <button
+              disabled={uploading}
+              onClick={() => void upload(retryRequest.file, retryRequest.text)}
+            >
+              Import erneut versuchen
+            </button>
+          )}
+        </p>
+      )}
+      {viewer && (
+        <div className="viewer" role="dialog" aria-label="Quellenansicht">
+          <div>
+            <strong>{viewer.title}</strong>
+            <button onClick={() => setViewer(null)}>×</button>
+          </div>
+          {viewer.chunks.map((c, i) => (
+            <article key={i}>
+              <small>
+                {c.metadata?.page ? 'Seite ' + c.metadata.page : ''}
+                {c.metadata?.section ? ' · ' + c.metadata.section : ''}
+              </small>
+              <p>{c.content}</p>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+function SourcePanel({
+  selected,
+  onToggle,
+  onRemove,
+  onSelect,
+  notebookId,
+}: {
+  selected: string[];
+  onToggle: (id: string) => void;
+  onRemove: (id: string) => void;
+  onSelect: (id: string) => void;
+  notebookId: string | null;
+}) {
+  return (
+    <aside className="sources panel" aria-labelledby="sources-title">
+      <div className="panel-head">
+        <div>
+          <p className="eyebrow">Notebook {notebookId ? '· Eigene Quellen' : ''}</p>
+          <h2 id="sources-title">Quellen</h2>
+        </div>
+      </div>
+      <p className="demo-note">Lade eigene Dokumente hoch.</p>
+      <Sources
+        selected={selected}
+        onToggle={onToggle}
+        onRemove={onRemove}
+        onSelect={onSelect}
+        notebookId={notebookId}
+      />
+    </aside>
+  );
+}
+type Artifact = {
+  id: string;
+  kind: string;
+  title: string;
+  content: string;
+  source_refs: Array<{ id: string; title: string }>;
+  stale: boolean;
+};
+function Studio({
+  notebookId,
+  selected,
+  messages,
+}: {
+  notebookId: string | null;
+  selected: string[];
+  messages: any[];
+}) {
+  const [items, setItems] = useState<Artifact[]>([]),
+    [error, setError] = useState(''),
+    [busy, setBusy] = useState(false),
+    [open, setOpen] = useState<Artifact | null>(null);
+  const load = async () => {
+    if (!notebookId) {
+      setItems([]);
+      return;
+    }
+    const r = await fetch('/api/notebooks/' + notebookId + '/artifacts');
+    if (r.ok)
+      setItems(
+        (await r.json()).artifacts.map((x: Artifact) => ({
+          ...x,
+          title:
+            x.kind === 'briefing' && x.title === 'Quellenbriefing' ? 'Zusammenfassung' : x.title,
+        })),
+      );
+  };
+  useEffect(() => {
+    void load();
+  }, [notebookId]);
+  const briefing = async () => {
+    if (!notebookId || busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      const r = await fetch('/api/notebooks/' + notebookId + '/briefing', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ sourceIds: selected }),
+      });
+      if (!r.ok) {
+        const x = await r.json().catch(() => null);
+        throw Error(x?.message ?? 'Zusammenfassung konnte nicht erstellt werden.');
+      }
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Zusammenfassung konnte nicht erstellt werden.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const saveAnswer = async () => {
+    if (!notebookId || busy) return;
+    const assistant = [...messages].reverse().find((m: any) => m.role === 'assistant');
+    const content = assistant ? messageText(assistant.parts) : '';
+    const answerId = assistant?.metadata?.assistantMessageId ?? assistant?.id;
+    if (!content) {
+      setError('Noch keine Chatantwort zum Speichern vorhanden.');
+      return;
+    }
+    if (!answerId) {
+      setError('Die Antwort wird noch gespeichert. Bitte erneut versuchen.');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    try {
+      const r = await fetch('/api/notebooks/' + notebookId + '/artifacts', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ title: 'Chatantwort als Notiz', content, answerId }),
+      });
+      if (!r.ok) throw Error('Notiz konnte nicht gespeichert werden. Bitte erneut versuchen.');
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Notiz konnte nicht gespeichert werden.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const remove = async (id: string) => {
+    if (!notebookId || busy || !confirm('Gespeichertes Ergebnis löschen?')) return;
+    setBusy(true);
+    setError('');
+    try {
+      const r = await fetch('/api/notebooks/' + notebookId + '/artifacts/' + id, {
+        method: 'DELETE',
+      });
+      if (!r.ok) throw Error('Löschen fehlgeschlagen. Bitte erneut versuchen.');
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Löschen fehlgeschlagen.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <aside className="studio panel" aria-labelledby="studio-title">
+      <div className="panel-head">
+        <div>
+          <p className="eyebrow">Arbeitsbereich</p>
+          <h2 id="studio-title">Notizen &amp; Zusammenfassungen</h2>
+        </div>
+      </div>
+      {!notebookId ? (
+        <p className="studio-empty">
+          Wähle ein Notebook, um Notizen und Zusammenfassungen zu speichern.
+        </p>
+      ) : (
+        <>
+          <p className="results-description">Notizen und Zusammenfassungen zu diesem Notebook.</p>
+          <div className="studio-actions">
+            <button
+              type="button"
+              aria-busy={busy}
+              onClick={() => void briefing()}
+              disabled={busy || !selected.length}
+            >
+              {busy ? 'Bitte warten …' : 'Zusammenfassung erstellen'}
+            </button>
+            <p className="action-help">
+              Erstellt eine Zusammenfassung aus deinen ausgewählten Quellen.
+            </p>
+            <button
+              type="button"
+              disabled={busy || !messages.some((m) => m.role === 'assistant')}
+              onClick={() => void saveAnswer()}
+            >
+              Chatantwort speichern
+            </button>
+          </div>
+          {error && (
+            <p className="source-error" role="alert">
+              {error}
+            </p>
+          )}
+          {!items.length ? (
+            <p className="studio-empty">
+              Noch keine Ergebnisse. Hier erscheinen deine gespeicherten Notizen und
+              Zusammenfassungen.
+            </p>
+          ) : (
+            <div className="artifact-list">
+              {items.map((x) => (
+                <article key={x.id} className="artifact" aria-label={x.title + ' ' + x.id}>
+                  <div>
+                    <strong>{x.title}</strong>
+                    <small>
+                      {x.kind === 'briefing' ? 'Zusammenfassung' : 'Notiz'} · {x.source_refs.length}{' '}
+                      Quellen{x.stale ? ' · Veraltet: Quelle entfernt' : ''}
+                    </small>
+                  </div>
+                  <button
+                    disabled={busy}
+                    aria-label={x.title + ' öffnen ' + x.id}
+                    onClick={() => setOpen(x)}
+                  >
+                    Öffnen
+                  </button>
+                  <button
+                    disabled={busy}
+                    aria-label={x.title + ' löschen ' + x.id}
+                    onClick={() => void remove(x.id)}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </article>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+      {open && (
+        <div
+          className="viewer"
+          role="dialog"
+          aria-label="Gespeichertes Ergebnis"
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setOpen(null);
+          }}
+        >
+          <div>
+            <strong>{open.title}</strong>
+            <button aria-label="Ergebnis schließen" autoFocus onClick={() => setOpen(null)}>
+              ×
+            </button>
+          </div>
+          {open.stale && (
+            <p className="source-error">
+              Veraltet: Mindestens eine referenzierte Quelle wurde entfernt.
+            </p>
+          )}
+          <article>
+            <pre>{open.content}</pre>
+          </article>
+        </div>
+      )}
+    </aside>
+  );
+}
 type Citation = {
   id: string;
   sourceId: string;
@@ -121,13 +580,16 @@ export default function Home() {
       el.style.height = Math.min(el.scrollHeight, 120) + 'px';
     }
   }, [q]);
-  const notebookId = activeNotebook?.id;
   const [sourceCount, setSourceCount] = useState(0);
   const [readyIds, setReadyIds] = useState<string[]>([]);
   useEffect(() => {
     let alive = true;
-    if (!notebookId) return;
-    fetch('/api/notebooks/' + notebookId + '/sources')
+    if (!activeNotebook) {
+      setSourceCount(0);
+      setReadyIds([]);
+      return;
+    }
+    fetch('/api/notebooks/' + activeNotebook.id + '/sources')
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => {
         if (!alive) return;
@@ -144,17 +606,18 @@ export default function Home() {
     return () => {
       alive = false;
     };
-  }, [notebookId, selected]);
+  }, [activeNotebook?.id, selected]);
   useEffect(() => {
     let alive = true;
-    if (!notebookId) return;
-    fetch('/api/notebooks/' + notebookId + '/history')
+    if (!activeNotebook) {
+      setHistory([]);
+      return;
+    }
+    fetch('/api/notebooks/' + activeNotebook.id + '/history')
       .then(async (r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!alive || !data) return;
-        const loaded = (data.chats ?? []).flatMap(
-          (chat: { messages?: HistoryMessage[] }) => chat.messages ?? [],
-        );
+        const loaded = (data.chats ?? []).flatMap((chat: any) => chat.messages ?? []);
         initialScroll.current = true;
         followLatest.current = true;
         setHistory(loaded);
@@ -170,17 +633,20 @@ export default function Home() {
     return () => {
       alive = false;
     };
-  }, [notebookId, setMessages]);
+  }, [activeNotebook?.id, setMessages]);
   useEffect(() => {
-    if (status !== 'ready' || !notebookId) return;
-    const latest = [...messages].reverse().find((message) => message.role === 'assistant');
+    if (status !== 'ready' || !activeNotebook) return;
+    const latest = [...messages].reverse().find((message: any) => message.role === 'assistant');
     const text = latest ? messageText(latest.parts) : '';
     if (!latest || !text) return;
     const messageId = latest.id;
     const assistantMessageId = (latest.metadata as { assistantMessageId?: string } | undefined)
       ?.assistantMessageId;
-    // Persisted history has no stream metadata and needs no reconciliation.
-    if (!assistantMessageId) return;
+    setCitationSync({ messageId, state: 'pending' });
+    if (!assistantMessageId) {
+      setCitationSync({ messageId, state: 'failed' });
+      return;
+    }
     let active = true;
     const run = ++syncRun.current;
     const controller = new AbortController();
@@ -188,7 +654,7 @@ export default function Home() {
       let gotHistory = false;
       for (let attempt = 0; attempt < 5; attempt++) {
         try {
-          const response = await fetch('/api/notebooks/' + notebookId + '/history', {
+          const response = await fetch('/api/notebooks/' + activeNotebook.id + '/history', {
             signal: controller.signal,
           });
           const data = response.ok ? await response.json() : null;
@@ -196,7 +662,7 @@ export default function Home() {
           if (data) {
             gotHistory = true;
             const loaded = (data.chats ?? []).flatMap(
-              (chat: { messages?: HistoryMessage[] }) => chat.messages ?? [],
+              (chat: any) => chat.messages ?? [],
             ) as HistoryMessage[];
             if (isAssistantPersisted(loaded, assistantMessageId, text)) {
               setHistory(loaded);
@@ -229,15 +695,13 @@ export default function Home() {
       active = false;
       controller.abort();
     };
-  }, [status, notebookId, messages]);
+  }, [status, activeNotebook?.id, messages]);
   const openCitation = async (c: Citation) => {
     if (!activeNotebook || !c.sourceId || !c.id) return;
     const r = await fetch('/api/notebooks/' + activeNotebook.id + '/sources/' + c.sourceId);
     if (!r.ok) return;
     const data = await r.json();
-    const found = (data.chunks ?? []).find(
-      (chunk: { id: string; content: string }) => chunk.id === c.id,
-    );
+    const found = (data.chunks ?? []).find((chunk: any) => chunk.id === c.id);
     setCitation(c);
     setCitationText(found?.content ?? c.excerpt);
   };
@@ -270,6 +734,7 @@ export default function Home() {
           </span>
           Lumen
         </div>
+        <Research ready={!!activeNotebook} />
         <div className="notebook">
           <BookOpen size={16} />
           {activeNotebook?.title ?? 'Mein Notebook'}{' '}
@@ -288,11 +753,6 @@ export default function Home() {
             void stop();
             setMessages([]);
             setHistory([]);
-            setSourceCount(0);
-            setReadyIds([]);
-            setCitationSync(null);
-            setProcessing(false);
-            setLastQuestion(null);
             setCitation(null);
             followLatest.current = true;
             setShowLatest(false);
@@ -416,7 +876,8 @@ export default function Home() {
                         </div>
                       ) : (
                         <small className="evidence-note">
-                          {persistedAssistantId && citationSync?.messageId !== message.id
+                          {citationSync?.messageId === message.id &&
+                          citationSync.state === 'pending'
                             ? 'Belege werden noch gespeichert.'
                             : citationSync?.messageId === message.id &&
                                 citationSync.state === 'timeout'
@@ -595,7 +1056,6 @@ export default function Home() {
                   Lade eigene Dokumente hoch. Wähle Quellen für deine Frage aus.
                 </p>
                 <Sources
-                  key={activeNotebook?.id}
                   selected={selected}
                   onToggle={toggle}
                   onRemove={(id) =>

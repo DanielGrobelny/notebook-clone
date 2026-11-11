@@ -1,5 +1,6 @@
 import { createServer, type Server } from 'node:http';
 let server: Server | undefined;
+const mockPort = Number(process.env.VISITOR_MOCK_PORT ?? '4386');
 const failed = new Set<string>();
 function completedResponse(text: string) {
   return {
@@ -192,10 +193,10 @@ export default async function globalSetup() {
   });
   await new Promise<void>((resolve, reject) => {
     server!.once('error', reject);
-    server!.listen(4386, '127.0.0.1', resolve);
+    server!.listen(mockPort, '127.0.0.1', resolve);
   });
   process.env.OPENAI_API_KEY = 'normal-suite-local-only';
-  process.env.OPENAI_BASE_URL = 'http://127.0.0.1:4386/v1';
+  process.env.OPENAI_BASE_URL = 'http://127.0.0.1:' + mockPort + '/v1';
   return async () => {
     await new Promise<void>((resolve) => server?.close(() => resolve()));
   };

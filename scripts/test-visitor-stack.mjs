@@ -10,6 +10,11 @@ const exec = promisify(execCallback);
 const directory = await mkdtemp(join(tmpdir(), 'visitor-tests-'));
 const prefix = 'visitor-tests-' + process.pid;
 const containers = [];
+const publicPort = Number(process.env.VISITOR_TEST_PORT ?? '4385');
+const mockPort = Number(process.env.VISITOR_MOCK_PORT ?? '4386');
+const storagePort = Number(process.env.VISITOR_STORAGE_PORT ?? '56823');
+const restPort = Number(process.env.VISITOR_REST_PORT ?? '56824');
+const gatewayPort = Number(process.env.VISITOR_GATEWAY_PORT ?? '56821');
 let gateway;
 let networkCreated = false;
 const run = async (command, args, options = {}) => {
@@ -74,7 +79,7 @@ function jwt(role) {
 const anon = jwt('anon'),
   service = jwt('service_role');
 try {
-  for (const port of [4385, 4386, 56821, 56823, 56824])
+  for (const port of [publicPort, mockPort, gatewayPort, storagePort, restPort])
     await new Promise((resolve, reject) => {
       const probe = net.createServer();
       probe.once('error', () => reject(Error('Required test port occupied: ' + port)));
@@ -113,7 +118,7 @@ try {
     '--tmpfs',
     '/var/lib/storage:rw,size=128m',
     '-p',
-    '127.0.0.1:56823:5000',
+    '127.0.0.1:' + storagePort + ':5000',
     'public.ecr.aws/supabase/storage-api:v1.79.36',
   ]);
   await waitFor(async () => {
@@ -145,11 +150,11 @@ try {
     '--env-file',
     rest,
     '-p',
-    '127.0.0.1:56824:3000',
+    '127.0.0.1:' + restPort + ':3000',
     'public.ecr.aws/supabase/postgrest:v16.4',
   ]);
   await waitFor(async () => {
-    return (await fetch('http://127.0.0.1:56824/')).ok;
+    return (await fetch('http://127.0.0.1:' + restPort + '/')).ok;
   });
   gateway = http.createServer((req, res) => {
     const storage = req.url.startsWith('/storage/v1/');
@@ -157,7 +162,7 @@ try {
     const upstream = http.request(
       {
         host: '127.0.0.1',
-        port: storage ? 56823 : 56824,
+        port: storage ? storagePort : restPort,
         path: req.url.slice(prefix.length),
         method: req.method,
         headers: req.headers,
@@ -175,16 +180,18 @@ try {
   });
   await new Promise((resolve, reject) => {
     gateway.once('error', reject);
-    gateway.listen(56821, '127.0.0.1', resolve);
+    gateway.listen(gatewayPort, '127.0.0.1', resolve);
   });
   const env = {
     ...process.env,
-    NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:56821',
+    NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:' + gatewayPort,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: anon,
     SUPABASE_SERVICE_ROLE_KEY: service,
     OPENAI_API_KEY: 'local-test-only',
-    OPENAI_BASE_URL: 'http://127.0.0.1:4386/v1',
+    OPENAI_BASE_URL: 'http://127.0.0.1:' + mockPort + '/v1',
     VISITOR_TEST_DB: '1',
+    VISITOR_TEST_PORT: String(publicPort),
+    VISITOR_MOCK_PORT: String(mockPort),
   };
   delete env.RUN_OPENAI_INTEGRATION;
   delete env.RUN_INTEGRATION;
